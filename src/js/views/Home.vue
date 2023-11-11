@@ -4,6 +4,7 @@ import { useSettings } from '../stores/settings';
 import { evalES, csi } from "../lib/utils/utils";
 import type { Ref } from "vue";
 import Menus from '../lib/Volt/menus.vue'
+import flyoutMenu from "../lib/Volt/flyout-menu.vue";
 import Button from "../lib/Volt/button.vue";
 import type { FlyoutMenuItem, FlyoutMenu, ContextMenuItem, ContextMenu } from '../lib/Volt/types'
 
@@ -14,7 +15,7 @@ const run = async (): Promise<void | null> => {
   // const diagnostic = JSON.parse(await evalES(`runDiagnostic()`));
 }
 
-const flyoutMenu = ref([
+const flyoutContent = ref([
   {
     label: "Refresh panel",
     id: "refresh",
@@ -29,6 +30,7 @@ const flyoutMenu = ref([
     },
     enabled: true,
     checked: false,
+    checkable: true,
   },
 ]) as Ref<FlyoutMenuItem[]>
 
@@ -118,9 +120,19 @@ const reportUpdate = (item: ContextMenuItem, state: boolean) => {
   toggleMenuItemCheckedById(item.id, contextMenu.value)
 }
 
+const flyoutClicked = (evt: any): void => {
+  console.log("CLICKED:", evt)
+}
+const flyoutOpened = (): void => {
+  console.log("OPENED")
+}
+const flyoutClosed = (): void => {
+  console.log("CLOSED")
+}
 </script>
 <template>
-  <Menus :flyout="flyoutMenu" :context="contextMenu" @context-check-update="reportUpdate" />
+  <flyoutMenu v-model="flyoutContent" @click="flyoutClicked" @close="flyoutClosed" @open="flyoutOpened" />
+  <!-- <Menus :flyout="flyoutContent" :context="contextMenu" @context-check-update="reportUpdate" /> -->
   <div class="home-content">
     HELLO WORLD
     <Button label="Test" @click="randomizeMenu" />
