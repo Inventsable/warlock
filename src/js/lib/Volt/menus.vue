@@ -1,8 +1,18 @@
 <script setup lang="ts">
+
+/**
+ * This file is deprecated, use context-menu and flyout-menu standalone components instead.
+ * 
+ * There is no easy way to sync update from child > parent in Vue 3, so it's best
+ * to just rely on v-model and update:modelValue within standalone components to keep
+ * all values fully synced between parent and child (for things like checked properties)
+ */
+
 import { csi } from "../../lib/utils/utils";
 import { computed, onMounted, watch } from "vue";
 import type { Ref } from 'vue'
-import type { ContextMenuItem, ContextMenu, ContextMenuItemProp, ContextMenuProp, FlyoutMenuItem, FlyoutMenu, FlyoutMenuItemProp, FlyoutMenuProp } from './types'
+import type { ContextMenuItem, ContextMenu, FlyoutMenuItem, FlyoutMenu } from './types'
+import type { ContextMenuItemProp, ContextMenuProp, FlyoutMenuItemProp, FlyoutMenuProp } from './types/props'
 
 const emit = defineEmits<{
   flyoutClick: [value: FlyoutMenuItem],

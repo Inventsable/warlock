@@ -5,6 +5,7 @@ import { evalES, csi } from "../lib/utils/utils";
 import type { Ref } from "vue";
 import Menus from '../lib/Volt/menus.vue'
 import flyoutMenu from "../lib/Volt/flyout-menu.vue";
+import contextMenu from '../lib/Volt/context-menu.vue'
 import Button from "../lib/Volt/button.vue";
 import type { FlyoutMenuItem, FlyoutMenu, ContextMenuItem, ContextMenu } from '../lib/Volt/types'
 
@@ -34,7 +35,7 @@ const flyoutContent = ref([
   },
 ]) as Ref<FlyoutMenuItem[]>
 
-const contextMenu = ref([
+const contextContent = ref([
   {
     label: "More cool stuff",
     callback: () => {
@@ -71,6 +72,11 @@ const contextMenu = ref([
   },
 ]) as Ref<ContextMenuItem[]>
 
+watch(contextContent, (newVal) => {
+  console.log("Parent received update:")
+  console.log(newVal)
+})
+
 const findMenuItemById = (id: string, menu: ContextMenuItem[]): ContextMenuItem | undefined => {
   for (const item of menu) {
     if (item.id === id) return item;
@@ -104,7 +110,7 @@ function generateRandomIDValue(length: number = 4): string {
 }
 
 const randomizeMenu = () => {
-  contextMenu.value.push({
+  contextContent.value.push({
     label: generateRandomIDValue(6),
     id: generateRandomIDValue(6),
     checkable: false,
@@ -112,12 +118,12 @@ const randomizeMenu = () => {
     enabled: true,
   } as FlyoutMenuItem)
   console.log("TEST")
-  console.log(contextMenu.value)
+  console.log(contextContent.value)
 }
 
 const reportUpdate = (item: ContextMenuItem, state: boolean) => {
   console.log(item, state, item.checked !== state)
-  toggleMenuItemCheckedById(item.id, contextMenu.value)
+  toggleMenuItemCheckedById(item.id, contextContent.value)
 }
 
 const flyoutClicked = (evt: any): void => {
@@ -132,7 +138,8 @@ const flyoutClosed = (): void => {
 </script>
 <template>
   <flyoutMenu v-model="flyoutContent" @click="flyoutClicked" @close="flyoutClosed" @open="flyoutOpened" />
-  <!-- <Menus :flyout="flyoutContent" :context="contextMenu" @context-check-update="reportUpdate" /> -->
+  <contextMenu v-model="contextContent" />
+  <!-- <Menus :flyout="flyoutContent" :context="contextContent" @context-check-update="reportUpdate" /> -->
   <div class="home-content">
     HELLO WORLD
     <Button label="Test" @click="randomizeMenu" />
