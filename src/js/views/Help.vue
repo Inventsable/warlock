@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import Drawer from '../lib/components/drawer.vue'
+import Drawer from '../lib/Volt/Modal/drawer.vue'
 import { useRouter } from 'vue-router'
 import { useHelp } from '../stores/help';
 const help = useHelp();

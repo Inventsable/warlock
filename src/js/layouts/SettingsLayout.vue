@@ -2,8 +2,8 @@
 import { RouterView, useRouter } from 'vue-router'
 import { useHelp } from "../stores/help";
 import { useSettings } from '../stores/settings';
-import Button from '../lib/components/button.vue'
-import Tabs from '../lib/components/tabs.vue'
+import Button from '../lib/Volt/button.vue'
+import Tabs from '../lib/Volt/Modal/tabs.vue'
 import {
   csi,
 } from "../lib/utils/utils";

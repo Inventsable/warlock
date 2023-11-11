@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import { onMounted, onBeforeMount } from "vue";
-import Panel from '../lib/components/panel.vue'
+import Panel from '../lib/Volt/panel.vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useSettings } from "../stores/settings";
 import { useHelp } from "../stores/help";

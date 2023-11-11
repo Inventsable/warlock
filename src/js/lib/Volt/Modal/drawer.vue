@@ -4,7 +4,7 @@
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useSlots, ref, computed, onMounted, watch, reactive } from 'vue';
 import { Routes, Route, Tabs, Tab } from './types'
-import { useHelp } from '../../stores/help';
+import { useHelp } from '../../../stores/help';
 
 const help = useHelp();
 const props = defineProps<{

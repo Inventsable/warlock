@@ -2,7 +2,7 @@
 import { computed, ref, watch, reactive } from 'vue';
 import { useHelp } from '../stores/help';
 import { useRouter } from 'vue-router';
-import HelpPage from '../lib/components/help-page.vue'
+import HelpPage from '../lib/Volt/Modal/help-page.vue'
 
 const router = useRouter();
 const help = useHelp();

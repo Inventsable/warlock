@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // @ts-nocheck
 import { computed, watch, nextTick, onMounted } from 'vue';
-import { useHelp } from '../../stores/help';
-import { openLinkInBrowser } from '../utils/utils';
+import { useHelp } from '../../../stores/help';
+import { openLinkInBrowser } from '../../utils/utils';
 const showdown = require('showdown');
 const props = defineProps<{
   content: string

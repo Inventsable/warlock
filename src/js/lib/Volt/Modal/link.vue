@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useSlots } from 'vue'
-import { openLinkInBrowser } from '../utils/utils';
+import { openLinkInBrowser } from '../../utils/utils';
 
 const slots = useSlots();
 const props = defineProps<{

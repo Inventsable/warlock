@@ -122,7 +122,7 @@ export const useHelp = defineStore(name, {
         console.error("Something went wrong in help assignment");
       }
     },
-    getPageByUUID(uuid: string): Page {
+    getPageByUUID(uuid: string | string[]): Page {
       // @ts-ignore
       return this.pages.find((page) => page.uuid == uuid);
     },

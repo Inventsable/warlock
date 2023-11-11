@@ -12,6 +12,7 @@ const props = defineProps<{
   debug?: Boolean
 }>()
 onMounted(() => {
+  // @ts-ignore
   if (window.cep) {
     initializeTheme();
     const extRoot = csi.getSystemPath("extension");
