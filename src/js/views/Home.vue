@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, watch, Ref } from "vue";
+import { onMounted, ref, computed, watch } from "vue";
 import { useSettings } from '../stores/settings';
 import { evalES, csi } from "../lib/utils/utils";
+import type { Ref } from "vue";
 import Menus from '../lib/Volt/menus.vue'
 import Button from "../lib/Volt/button.vue";
-import type { FlyoutMenuItem } from '../lib/Volt/types/index.ts'
+import type { FlyoutMenuItem, FlyoutMenu, ContextMenuItem, ContextMenu } from '../lib/Volt/types'
 
 const settings = useSettings()
 //
@@ -29,21 +30,65 @@ const flyoutMenu = ref([
     enabled: true,
     checked: false,
   },
-])
+]) as Ref<FlyoutMenuItem[]>
 
-// csi.addEventListener("com.adobe.csxs.events.flyoutMenuClicked", (p: any) => {
-//   const item = menuOpts.find(i => i.id == p.data.menuId);
-//   item?.callback();
-// })
-// const flyoutXML = `
-// <Menu>
-//   <MenuItem Id="refresh" Label="Refresh panel" Enabled="true" Checked="false"/>
-//   <MenuItem Label="---" />
-//   <MenuItem Id="seeMore" Label="More cool stuff" Enabled="true" Checked="false"/>
-//   <MenuItem Id="resetStore" Label="Reset data" Enabled="true" Checked="false"/>
-// </Menu>
-// `
-// csi.setPanelFlyoutMenu(flyoutXML)
+const contextMenu = ref([
+  {
+    label: "More cool stuff",
+    callback: () => {
+      console.log("OPEN LINK TO SITE")
+    },
+    enabled: true,
+    checkable: false,
+    id: "test",
+    checked: false,
+  },
+  {
+    label: "Test",
+    callback: () => {
+      console.log("OPEN LINK TO SITE")
+    },
+    enabled: true,
+    checkable: false,
+    checked: false,
+    menu: [
+      {
+        label: "Test 1",
+        checkable: true,
+        checked: false,
+      },
+      {
+        label: "test 2",
+        menu: [
+          {
+            label: "Hello world"
+          }
+        ]
+      }
+    ]
+  },
+]) as Ref<ContextMenuItem[]>
+
+const findMenuItemById = (id: string, menu: ContextMenuItem[]): ContextMenuItem | undefined => {
+  for (const item of menu) {
+    if (item.id === id) return item;
+    if (item.menu) {
+      const foundInChildren = findMenuItemById(id, item.menu);
+      if (foundInChildren) {
+        return foundInChildren;
+      }
+    }
+  }
+  return undefined;
+}
+
+const toggleMenuItemCheckedById = (id: string | undefined, menu: ContextMenuItem[]): boolean | null => {
+  const target = findMenuItemById(id || "", menu);
+  if (target) {
+    target.checked = !target?.checked;
+    return target.checked
+  } else return null;
+}
 
 onMounted(() => {
   console.log("Mounted")
@@ -57,18 +102,25 @@ function generateRandomIDValue(length: number = 4): string {
 }
 
 const randomizeMenu = () => {
-  flyoutMenu.value.push({
+  contextMenu.value.push({
     label: generateRandomIDValue(6),
-    callback: () => console.log("TESTING")
+    id: generateRandomIDValue(6),
+    checkable: false,
+    checked: false,
+    enabled: true,
   } as FlyoutMenuItem)
-
   console.log("TEST")
-  console.log(flyoutMenu.value)
+  console.log(contextMenu.value)
+}
+
+const reportUpdate = (item: ContextMenuItem, state: boolean) => {
+  console.log(item, state, item.checked !== state)
+  toggleMenuItemCheckedById(item.id, contextMenu.value)
 }
 
 </script>
 <template>
-  <Menus :flyout="flyoutMenu" />
+  <Menus :flyout="flyoutMenu" :context="contextMenu" @context-check-update="reportUpdate" />
   <div class="home-content">
     HELLO WORLD
     <Button label="Test" @click="randomizeMenu" />

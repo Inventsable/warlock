@@ -2,10 +2,16 @@
 import { csi } from "../../lib/utils/utils";
 import { computed, onMounted, watch } from "vue";
 import type { Ref } from 'vue'
-import type { ContextMenuItem, ContextMenu, FlyoutMenuItem, FlyoutMenu, FlyoutMenuItemProp } from './types'
+import type { ContextMenuItem, ContextMenu, ContextMenuItemProp, ContextMenuProp, FlyoutMenuItem, FlyoutMenu, FlyoutMenuItemProp, FlyoutMenuProp } from './types'
 
 const emit = defineEmits<{
-  (e: "click"): void;
+  flyoutClick: [value: FlyoutMenuItem],
+  flyoutOpen: [],
+  flyoutClose: [],
+  contextClick: [value: ContextMenuItem],
+  contextOpen: [],
+  contextClose: [],
+  contextCheckUpdate: [value: ContextMenuItem, state: boolean]
 }>();
 
 export interface Props {
@@ -51,6 +57,11 @@ function generateRandomIDValue(length: number = 4): string {
   return result;
 }
 
+/**
+ * 
+ * FLYOUT
+ * 
+ */
 const flyout = computed(() => {
   let append: FlyoutMenuItem[] = [];
   if ((props.refresh as Ref<boolean>).value ?? props.refresh) {
@@ -67,11 +78,16 @@ const hasFlyoutMenu = computed(() => {
 const sanitizedFlyoutMenu = computed(() => {
   return ((flyout as Ref<FlyoutMenu>).value ?? props.flyout).map((item: FlyoutMenuItem) => {
     let temp = Object.assign({}, item);
-    if (!temp.hasOwnProperty('id')) {
-      temp['id'] = generateRandomIDValue();
+    if (temp.label !== '---') {
+      if (!temp.hasOwnProperty('id')) {
+        temp['id'] = generateRandomIDValue();
+      }
+      if (!temp.hasOwnProperty('enabled')) temp['enabled'] = true;
+      if (!temp.hasOwnProperty('checked')) temp['checked'] = false;
+      if (!temp.hasOwnProperty('checkable')) temp['checkable'] = false;
     }
     return temp as FlyoutMenuItemProp;
-  }) as FlyoutMenu
+  }) as FlyoutMenuProp
 })
 
 const flyoutXML = computed(() => {
@@ -89,10 +105,12 @@ const flyoutXML = computed(() => {
 csi.addEventListener("com.adobe.csxs.events.flyoutMenuClicked", (p: any) => {
   const item = sanitizedFlyoutMenu.value.find(i => i.id == p.data.menuId);
   if (item && item.callback) {
+    emit('flyoutClick', item)
     item?.callback();
   } else {
     console.log("ITEM NOT FOUND:", p.data.menuId)
   }
+
 })
 if (hasFlyoutMenu.value) {
   watch(() => flyoutXML.value, (newVal) => {
@@ -100,7 +118,105 @@ if (hasFlyoutMenu.value) {
   })
 }
 
+/**
+ * 
+ * CONTEXT
+ * 
+ */
+
+const contextBase = computed(() => {
+  let prepend: ContextMenuItem[] = [];
+  if ((props.refresh as Ref<boolean>).value ?? props.refresh) {
+    prepend.push({ label: 'Refresh panel', callback: () => location.reload() })
+    // prepend.push({ label: '---' })
+  }
+  return [...prepend, ...(props.context as ContextMenuItem[])];
+})
+
+const hasContextMenu = computed(() => {
+  return ((contextBase as Ref<ContextMenu>).value ?? props.context).length
+})
+
+const sanitizeContextMenuItem = (item: ContextMenuItem): ContextMenuItemProp => {
+  let temp = Object.assign({}, item);
+  if (temp.label !== '---') {
+    if (!temp.hasOwnProperty('id') && temp.label !== "---") {
+      temp['id'] = generateRandomIDValue();
+    }
+    if (!temp.hasOwnProperty('enabled')) temp['enabled'] = true;
+    if (!temp.hasOwnProperty('checked')) temp['checked'] = false;
+    if (!temp.hasOwnProperty('checkable')) temp['checkable'] = false;
+    if (temp.menu && temp.menu.length)
+      temp.menu = temp.menu.map((item: ContextMenuItem): ContextMenuItemProp => sanitizeContextMenuItem(item))
+  }
+  return temp as ContextMenuItemProp;
+}
+
+const sanitizedContextMenu = computed(() => {
+  return ((contextBase as Ref<ContextMenu>).value ?? props.context).map((item: ContextMenuItem) => sanitizeContextMenuItem(item)) as ContextMenuProp
+})
+
+const findContextMenuItemById = (id: string, menu: ContextMenuItem[]): ContextMenuItem | undefined => {
+  for (const item of menu) {
+    if (item.id === id) return item;
+    if (item.menu) {
+      const foundInChildren = findContextMenuItemById(id, item.menu);
+      if (foundInChildren) {
+        return foundInChildren;
+      }
+    }
+  }
+  return undefined;
+}
+
+const contextClickHandler = (id: string) => {
+  console.log(id)
+  const target = findContextMenuItemById(id, sanitizedContextMenu.value)
+  if (target && target.callback) {
+    target.callback()
+  } else if (target && target.checkable) {
+    emit("contextCheckUpdate", (target as ContextMenuItemProp), !target.checked || false)
+  } else {
+    console.log("Target not found")
+  }
+}
+
+const setContextMenu = (value?: ContextMenuProp) => {
+  console.log("Setting context menu...")
+  if (value) console.log(JSON.stringify(value))
+  else console.log(JSON.stringify(sanitizedContextMenu.value))
+  try {
+    window.__adobe_cep__.invokeAsync(
+      "setContextMenuByJSON",
+      JSON.stringify({
+        menu: value || sanitizedContextMenu.value
+      }),
+      contextClickHandler
+    );
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+if (hasContextMenu.value) {
+  watch(() => sanitizedContextMenu.value, (newVal: ContextMenuProp) => {
+    setContextMenu(newVal)
+  })
+}
+
 onMounted(() => {
-  if (hasFlyoutMenu.value) csi.setPanelFlyoutMenu(flyoutXML.value);
+  if (hasFlyoutMenu.value && window.__adobe_cep__) {
+    csi.setPanelFlyoutMenu(flyoutXML.value);
+    csi.addEventListener("com.adobe.csxs.events.flyoutMenuOpened", () => emit("flyoutOpen"))
+    csi.addEventListener("com.adobe.csxs.events.flyoutMenuClosed", () => emit("flyoutClose"))
+  }
+  if (hasContextMenu.value && window.__adobe_cep__) {
+    setContextMenu(sanitizedContextMenu.value)
+  }
+  else {
+    console.log("No context menu?")
+  }
 })
 </script>
+
+<template />

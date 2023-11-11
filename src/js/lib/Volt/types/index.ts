@@ -6,18 +6,15 @@ export interface FlyoutMenuItem<T = any> {
   checked?: boolean;
   callback?: () => T;
 }
-export interface FlyoutMenuItemProp<T = any> {
-  label: string;
+export interface FlyoutMenuItemProp<T = any> extends FlyoutMenuItem<T> {
   id: string;
-  enabled?: boolean;
-  checkable?: boolean;
-  checked?: boolean;
-  callback?: () => T;
 }
-export type FlyoutMenu = FlyoutMenuItemProp[];
+export type FlyoutMenu = FlyoutMenuItem[];
+export type FlyoutMenuProp = FlyoutMenuItemProp[];
 
 export interface ContextMenuItem<T = any> {
   label: string;
+  id?: string;
   enabled?: boolean;
   checkable?: boolean;
   checked?: boolean;
@@ -25,4 +22,11 @@ export interface ContextMenuItem<T = any> {
   icon?: string;
   menu?: ContextMenuItem[];
 }
+export interface ContextMenuItemProp<T = any> extends ContextMenuItem<T> {
+  id: string;
+  checked: boolean;
+  checkable: boolean;
+  enabled: boolean;
+}
 export type ContextMenu = ContextMenuItem[];
+export type ContextMenuProp = ContextMenuItemProp[];
