@@ -15,19 +15,19 @@ const emit = defineEmits<{
 
 export interface Props {
   refresh?: boolean | Ref<boolean>,
-  modelValue: FlyoutMenuItem[] | Ref<FlyoutMenuItem[]>,
+  modelValue?: FlyoutMenuItem[] | Ref<FlyoutMenuItem[]>,
 }
 
 const props = withDefaults(defineProps<Props>(), {
   refresh: false,
   modelValue: () => [
-    {
-      label: "Refresh panel",
-      id: "refresh",
-      callback: () => location.reload(),
-      enabled: true,
-      checked: false,
-    } as FlyoutMenuItem<void>,
+    //   {
+    //     label: "Refresh panel",
+    //     id: "refresh",
+    //     callback: () => location.reload(),
+    //     enabled: true,
+    //     checked: false,
+    //   } as FlyoutMenuItem<void>,
   ] as FlyoutMenuItem[]
 })
 
@@ -45,7 +45,8 @@ const flyout = computed(() => {
   let prepend: FlyoutMenuItem[] = [];
   if ((props.refresh as Ref<boolean>).value ?? props.refresh) {
     prepend.push({ label: 'Refresh panel', callback: () => location.reload() })
-    prepend.push({ label: '---' })
+    if ((props.modelValue as FlyoutMenu)?.length || (props.modelValue as Ref<FlyoutMenu>)?.value?.length)
+      prepend.push({ label: '---' })
   }
   return [...prepend, ...(props.modelValue as FlyoutMenuItem[])];
 })

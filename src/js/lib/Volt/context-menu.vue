@@ -1,6 +1,14 @@
 <script setup lang="ts">
+/**
+ * There still seems to be an issue with deep nesting where depths > 2 can't find menu items by id.
+ * 
+ * This could be due to ids being stripped or rewritten as different values, or wrong var references somewhere.
+ * 
+ * In any case, it works exactly like Brutalism's but with full Typescript support.
+ */
+
 import { generateQuickGuid } from "./mixins";
-import { computed, onMounted, watch, nextTick } from "vue";
+import { computed, onMounted, watch } from "vue";
 import type { Ref } from 'vue'
 import type { ContextMenuItem, ContextMenu } from './types'
 import type { ContextMenuItemProp, ContextMenuProp } from './types/props'
@@ -11,23 +19,15 @@ const emit = defineEmits<{
 }>();
 
 export interface Props {
-  debug?: boolean,
+  debug?: boolean, // Used to toggle console statements within component for debugging
   refresh?: boolean | Ref<boolean>,
-  modelValue: ContextMenuItem[] | Ref<ContextMenuItem[]>,
+  modelValue?: ContextMenuItem[] | Ref<ContextMenuItem[]>,
 }
 
 const props = withDefaults(defineProps<Props>(), {
   refresh: false,
   debug: false,
-  modelValue: () => [
-    {
-      label: "Refresh panel",
-      id: "refresh",
-      callback: () => location.reload(),
-      enabled: true,
-      checked: false,
-    } as ContextMenuItem<void>,
-  ] as ContextMenuItem[]
+  modelValue: () => [] as ContextMenuItem[]
 })
 
 const menuBase = computed<ContextMenuItem[] | Ref<ContextMenuItem[]>>({
@@ -65,7 +65,7 @@ const menuExtended = computed(() => {
   let prepend: ContextMenuItem[] = [];
   if ((props.refresh as Ref<boolean>).value ?? props.refresh) {
     prepend.push(sanitizeContextMenuItem({ label: 'Refresh panel', callback: () => location.reload() }))
-    if ((props.modelValue as ContextMenu).length || (props.modelValue as Ref<ContextMenu>).value.length)
+    if ((props.modelValue as ContextMenu)?.length || (props.modelValue as Ref<ContextMenu>)?.value?.length)
       prepend.push({ label: '---' })
   }
   return [...prepend, ...(menuBaseSanitized.value as ContextMenuItem[])];
@@ -101,6 +101,9 @@ const findContextMenuItemById = (id: string, menu: ContextMenuItem[]): ContextMe
 const contextClickHandler = (id: string) => {
   if (props.debug) console.log(id)
   const target = findContextMenuItemById(id, menuExtended.value)
+  if (target) {
+    emit('click', target)
+  }
   if (target && target.callback) {
     target.callback()
   } else if (target && target.checkable) {
@@ -146,7 +149,7 @@ onMounted(() => {
   if (hasContextMenu.value && window.__adobe_cep__) {
     setContextMenu(menuExtended.value)
     watch(() => menuExtended.value, (newVal: ContextMenuProp | ContextMenu) => {
-      console.log("CONTEXT MENU CHANGE")
+      console.log("Context menu change")
       setContextMenu(newVal)
     })
   }
