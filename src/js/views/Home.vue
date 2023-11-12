@@ -40,9 +40,49 @@ const isStrokeActive = computed({
   }
 })
 
+const isStrokeNone = computed({
+  get() {
+    return settings.indicator.stroke.empty
+  },
+  set(val: boolean) {
+    settings.indicator.stroke.empty = val;
+  }
+})
+
+const isStrokeMulti = computed({
+  get() {
+    return settings.indicator.stroke.multi
+  },
+  set(val: boolean) {
+    settings.indicator.stroke.multi = val;
+  }
+})
+const isFillNone = computed({
+  get() {
+    return settings.indicator.fill.empty
+  },
+  set(val: boolean) {
+    settings.indicator.fill.empty = val;
+  }
+})
+
+const isFillMulti = computed({
+  get() {
+    return settings.indicator.fill.multi
+  },
+  set(val: boolean) {
+    settings.indicator.fill.multi = val;
+  }
+})
+
 </script>
 <template>
-  <checkbox label="stroke" v-model="isStrokeActive" />
+  <checkbox label="strokeActive" v-model="isStrokeActive" />
+  <checkbox label="strokeMulti" v-model="isStrokeMulti" />
+  <checkbox label="strokeEmpty" v-model="isStrokeNone" />
+  <checkbox label="fillMulti" v-model="isFillMulti" />
+  <checkbox label="fillEmpty" v-model="isFillNone" />
+
   <flyoutMenu refresh />
   <contextMenu refresh v-model="context" />
   <div class="home-content">

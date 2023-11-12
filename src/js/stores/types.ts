@@ -14,7 +14,7 @@ export interface SettingsStore {
     };
     fill: {
       color: ColorValue;
-      multi: false;
+      multi: boolean;
       empty: boolean;
     };
   };
