@@ -1,6 +1,9 @@
 import type { ColorValue } from "../../shared/shared";
 
 export interface SettingsStore {
+  selection: {
+    length: number;
+  };
   options: {
     locked: boolean;
     isCMYK: boolean;
@@ -9,12 +12,12 @@ export interface SettingsStore {
     show: boolean;
     stroke: {
       active: boolean;
-      color: ColorValue;
+      colors: ColorValue[];
       multi: boolean;
       empty: boolean;
     };
     fill: {
-      color: ColorValue;
+      colors: ColorValue[];
       multi: boolean;
       empty: boolean;
     };

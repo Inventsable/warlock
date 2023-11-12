@@ -5,16 +5,16 @@ import { getVerbosePackage } from '../utils/app';
 
 const settings = useSettings();
 
-const showFillMulti = computed(() => settings.indicator.fill.multi),
-  showFillNone = computed(() => settings.indicator.fill.empty && !settings.indicator.fill.multi),
-  showFillBG = computed(() => !settings.indicator.fill.empty && !settings.indicator.fill.multi);
+const showFillMulti = computed(() => settings.fillIsMulti),
+  showFillNone = computed(() => settings.fillIsEmpty),
+  showFillBG = computed(() => !settings.fillIsEmpty && !settings.fillIsMulti);
 
-const showStrokeMulti = computed(() => settings.indicator.stroke.multi),
-  showStrokeNone = computed(() => settings.indicator.stroke.empty && !settings.indicator.stroke.multi),
-  showStrokeBG = computed(() => !settings.indicator.stroke.empty && !settings.indicator.stroke.multi);
+const showStrokeMulti = computed(() => settings.strokeIsMulti),
+  showStrokeNone = computed(() => settings.strokeIsEmpty),
+  showStrokeBG = computed(() => !settings.strokeIsEmpty && !settings.strokeIsMulti);
 
-const fillBGColor = computed(() => getVerbosePackage(settings.indicator.fill.color).hex),
-  strokeBGColor = computed(() => getVerbosePackage(settings.indicator.stroke.color).hex);
+const fillBGColor = computed(() => getVerbosePackage(settings.fillColor).hex),
+  strokeBGColor = computed(() => getVerbosePackage(settings.strokeColor).hex);
 </script>
 
 <template>

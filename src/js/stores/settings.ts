@@ -44,6 +44,9 @@ deduceTheme();
 export const useSettings = defineStore(name, {
   state: () =>
     ({
+      selection: {
+        length: 0,
+      },
       options: {
         locked: false,
         isCMYK: false,
@@ -61,23 +64,24 @@ export const useSettings = defineStore(name, {
         show: true,
         stroke: {
           active: false,
-          color: {
-            red: 255,
-            green: 0,
-            blue: 0,
-          } as ColorValue,
+          colors: [
+            {
+              red: 255,
+              green: 0,
+              blue: 0,
+            } as ColorValue,
+          ],
           multi: false,
           empty: false,
         },
         fill: {
-          // The active color would be the [0] index when it exists.
-          // It'd be nicer to hook this into a getter for active color,
-          // and allow an array entry here to compensate all data
-          color: {
-            red: 0,
-            green: 150,
-            blue: 150,
-          } as ColorValue,
+          colors: [
+            {
+              red: 0,
+              green: 150,
+              blue: 150,
+            } as ColorValue,
+          ],
           multi: false,
           empty: false,
         },
@@ -118,20 +122,54 @@ export const useSettings = defineStore(name, {
   getters: {
     fillIsEmpty(state) {
       return (
-        state.indicator.fill.color &&
-        state.indicator.fill.color.typename &&
-        /nocolor/i.test(state.indicator.fill.color.typename)
+        state.indicator.fill.colors &&
+        state.indicator.fill.colors.length == 1 &&
+        state.indicator.fill.colors[0].typename &&
+        /nocolor/i.test(state.indicator.fill.colors[0].typename)
       );
+    },
+    fillColor(state) {
+      return state.indicator.fill.colors.length
+        ? state.indicator.fill.colors[0]
+        : {
+            red: 0,
+            blue: 0,
+            green: 0,
+            typename: "RGBColor",
+          };
+    },
+    fillIsMulti(state) {
+      return state.indicator.fill.colors.length > 1;
     },
     strokeIsEmpty(state) {
       return (
-        state.indicator.stroke.color &&
-        state.indicator.stroke.color.typename &&
-        /nocolor/i.test(state.indicator.stroke.color.typename)
+        state.indicator.stroke.colors &&
+        state.indicator.stroke.colors.length == 1 &&
+        state.indicator.stroke.colors[0].typename &&
+        /nocolor/i.test(state.indicator.stroke.colors[0].typename)
       );
+    },
+    strokeColor(state) {
+      return state.indicator.stroke.colors.length
+        ? state.indicator.stroke.colors[0]
+        : {
+            red: 0,
+            blue: 0,
+            green: 0,
+            typename: "RGBColor",
+          };
+    },
+    strokeIsMulti(state) {
+      return state.indicator.stroke.colors.length > 1;
     },
   },
   actions: {
+    setHardFill(value: ColorValue) {
+      this.$state.indicator.fill.colors = [value];
+    },
+    setHardStroke(value: ColorValue) {
+      this.$state.indicator.stroke.colors = [value];
+    },
     async init() {
       console.log("SETTINGS INIT");
       await this.verifyTempFolder();

@@ -60,59 +60,48 @@ const context = ref([
   },
 ])
 
+/**
+ * While this does work for basic operations, it still doesn't handle GrayColor or GradientColor.
+ */
 const shallowScan = async () => {
   const result = JSON.parse(await evalES("shallowScan()"))
   // 
   // If no selection is present in app, trust the default values
   if (!result.hasSelection) {
-    console.log("No selected objects present")
-    settings.indicator.fill.multi = false;
-    settings.indicator.stroke.multi = false;
-    if (/rgb|cmyk/i.test(result.appFill.typename)) {
-      settings.indicator.fill.color = result.appFill;
+    if (/rgb|cmyk|nocolor/i.test(result.appFill.typename)) {
+      // Rewrite all fills to a single entry array with current value:
+      settings.setHardFill(result.appFill);
     } else {
+      // Otherwise something went haywire and isn't accounted for:
       console.log("Something is up with fill:")
       console.log(result.appFill);
     }
-    if (/rgb|cmyk/i.test(result.appStroke.typename)) {
-      settings.indicator.stroke.color = result.appStroke;
+    if (/rgb|cmyk|nocolor/i.test(result.appStroke.typename)) {
+      // Rewrite all stroke to a single entry array with current value:
+      settings.setHardStroke(result.appStroke)
     } else {
+      // Otherwise something went haywire and isn't accounted for:
       console.log("Something is up with stroke:")
       console.log(result.appStroke);
     }
     return null;
   } else if (result.hasSelection) {
-    // 
-    console.log(result)
+    settings.selection.length = result.selectionLength;
+    // The needle>haystack logic isn't perfect in JSX via NoColors, which create duplicates.
+    // Filter out duplicate entries here via filter instead of Set, to retain Array form:
     const fills = result.fills.filter((v: ColorValue, i: number, a: ColorValue[]) => {
       return a.findIndex((el: ColorValue) => JSON.stringify(el) == JSON.stringify(v)) == i;
     })
     const strokes = result.strokes.filter((v: ColorValue, i: number, a: ColorValue[]) => {
       return a.findIndex((el: ColorValue) => JSON.stringify(el) == JSON.stringify(v)) == i;
     })
-    if (fills.length == 1) {
-      settings.indicator.fill.multi = false;
-      if (fills.typename !== 'NoColor') {
-        settings.indicator.fill.color = fills[0];
-      } else {
-        settings.indicator.fill.empty = true;
-      }
-    } else {
-      settings.indicator.fill.empty = false;
-      settings.indicator.fill.multi = true;
-    }
-    if (strokes.length == 1) {
-      settings.indicator.stroke.multi = false;
-      if (strokes.typename !== 'NoColor') {
-        settings.indicator.stroke.color = strokes[0];
-      } else {
-        settings.indicator.stroke.empty = true;
-      }
-    } else {
-      settings.indicator.stroke.empty = false;
-      settings.indicator.stroke.multi = true;
-    }
+    // Then just set our values directly:
+    settings.indicator.fill.colors = fills;
+    settings.indicator.stroke.colors = strokes;
+
+    console.log(settings.indicator.fill.colors);
   } else {
+    // In theory this should never be triggered unless the script returns without a hasSelection property
     console.log("Something went wrong, script returned faulty data")
   }
   // 
@@ -136,6 +125,10 @@ const checkForHostAdapterInFilepath = () => {
   return doesExist;
 }
 
+const syncToAppIndicator = async (): Promise<void> => {
+  settings.indicator.stroke.active = /false/i.test(await evalES(`checkFillStroke()`))
+}
+
 onBeforeMount(async () => {
   const adapterOnline = checkForHostAdapterInFilepath();
   // 
@@ -145,7 +138,7 @@ onBeforeMount(async () => {
     // If the user toggles active fill/stroke, trigger
     if (settings.adapter.listenTo.fillStroke) {
       adapter.addEventListener(AIEvent.PAINT_STYLE_FILL_STROKE_CHANGED, async (e: any) => {
-        settings.indicator.stroke.active = /false/i.test(await evalES(`checkFillStroke()`))
+        await syncToAppIndicator();
       });
     }
     // 
@@ -170,11 +163,19 @@ onBeforeMount(async () => {
     //   console.log(e);
     // });
   }
+  console.log("Sync to indicator")
+  await syncToAppIndicator();
 })
 
-onMounted(() => {
+onMounted(async () => {
   console.log("Mounted")
+
+  // For testing
+  // const result = JSON.parse(await evalES(`getActiveFillColor()`))
+  // console.log(result);
+
 })
+
 </script>
 <template>
   <flyoutMenu refresh />
