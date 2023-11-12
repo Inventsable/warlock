@@ -12,3 +12,7 @@ export const helloWorld = () => {
   alert("Hello from Illustrator");
   app.activeDocument.path;
 };
+
+export const checkFillStroke = (): boolean => {
+  return app.isStrokeActive();
+};

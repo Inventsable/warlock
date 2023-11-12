@@ -5,6 +5,13 @@
  * This could be due to ids being stripped or rewritten as different values, or wrong var references somewhere.
  * 
  * In any case, it works exactly like Brutalism's but with full Typescript support.
+ * 
+ * 
+ * -- 
+ * 
+ * Another issue noticed is that checked property isn't triggering if connected to a computed getter.
+ * It works fine otherwise, but when linked to a computed getter to simplify a pinia store value,
+ * it never appears to trigger the modelValue update.
  */
 
 import { generateQuickGuid } from "./mixins";
@@ -14,7 +21,7 @@ import type { ContextMenuItem, ContextMenu } from './types'
 import type { ContextMenuItemProp, ContextMenuProp } from './types/props'
 
 const emit = defineEmits<{
-  click: [value: ContextMenuItem],
+  click: [value: ContextMenuItem | ContextMenuItemProp],
   'update:modelValue': [value: ContextMenu | Ref<ContextMenu>],
 }>();
 
@@ -117,7 +124,9 @@ const contextClickHandler = (id: string) => {
       sibling.checked = !sibling?.checked;
       if (props.debug)
         console.log("Updating sibling to toggled value:", sibling.checked)
-      menuBase.value = desanitizeMenuList(mirror, menuBase.value as ContextMenuItem[]);
+      const newValue = desanitizeMenuList(mirror, menuBase.value as ContextMenuItem[])
+      menuBase.value = newValue;
+      emit("update:modelValue", newValue); // Isn't working for computed getter?
     }
   } else if (props.debug) {
     console.log("Target not found")
@@ -149,7 +158,7 @@ onMounted(() => {
   if (hasContextMenu.value && window.__adobe_cep__) {
     setContextMenu(menuExtended.value)
     watch(() => menuExtended.value, (newVal: ContextMenuProp | ContextMenu) => {
-      console.log("Context menu change")
+      if (props.debug) console.log("Context menu change")
       setContextMenu(newVal)
     })
   }

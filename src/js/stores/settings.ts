@@ -48,7 +48,17 @@ export const useSettings = defineStore(name, {
         locked: false,
         isCMYK: false,
       },
+      adapter: {
+        online: false,
+        disabled: false,
+        listenTo: {
+          fillStroke: true,
+          selection: true,
+          documentChange: true,
+        },
+      },
       indicator: {
+        show: true,
         stroke: {
           active: false,
           color: {
@@ -135,7 +145,7 @@ export const useSettings = defineStore(name, {
       else return false;
     },
     async saveSettings() {
-      console.log("Saving settings....");
+      // console.log("Saving settings....");
       return await writeFile(
         SETTINGS_FILE,
         JSON.stringify(this.$state, null, 4)

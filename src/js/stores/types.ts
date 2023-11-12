@@ -6,6 +6,7 @@ export interface SettingsStore {
     isCMYK: boolean;
   };
   indicator: {
+    show: boolean;
     stroke: {
       active: boolean;
       color: ColorValue;
@@ -19,6 +20,15 @@ export interface SettingsStore {
     };
   };
   lists: swatchList[];
+  adapter: {
+    online: boolean;
+    disabled: boolean;
+    listenTo: {
+      fillStroke: boolean;
+      selection: boolean;
+      documentChange: boolean;
+    };
+  };
 }
 
 export interface swatch {
