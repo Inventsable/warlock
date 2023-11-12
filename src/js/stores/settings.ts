@@ -10,6 +10,14 @@ import {
   exists,
   deleteFile,
 } from "../lib/utils/fs";
+import type {
+  rgbColor,
+  cmykColor,
+  hsbColor,
+  ColorValue,
+} from "../../shared/shared";
+import type { swatch, swatchList, SettingsStore } from "./types";
+
 const name = "settings";
 const storage = window.localStorage;
 const override = false;
@@ -34,11 +42,66 @@ let isLightTheme = false;
 deduceTheme();
 
 export const useSettings = defineStore(name, {
-  state: () => ({
-    options: {
-      foo: "bar",
-    },
-  }),
+  state: () =>
+    ({
+      options: {
+        locked: false,
+        isCMYK: false,
+      },
+      indicator: {
+        stroke: {
+          active: false,
+          color: {
+            red: 255,
+            green: 0,
+            blue: 0,
+          } as ColorValue,
+          multi: false,
+          empty: false,
+        },
+        fill: {
+          color: {
+            red: 0,
+            green: 150,
+            blue: 150,
+          } as ColorValue,
+          multi: false,
+          empty: false,
+        },
+      },
+      lists: [
+        {
+          name: "foo",
+          index: 0,
+          swatches: [
+            {
+              color: {
+                red: 255,
+                green: 0,
+                blue: 0,
+              } as ColorValue,
+              index: 0,
+            } as swatch,
+            {
+              color: {
+                red: 0,
+                green: 150,
+                blue: 150,
+              } as ColorValue,
+              index: 1,
+            } as swatch,
+            {
+              color: {
+                red: 100,
+                green: 0,
+                blue: 100,
+              } as ColorValue,
+              index: 2,
+            } as swatch,
+          ],
+        } as swatchList,
+      ],
+    } as SettingsStore),
   getters: {},
   actions: {
     async init() {
@@ -72,6 +135,7 @@ export const useSettings = defineStore(name, {
       else return false;
     },
     async saveSettings() {
+      console.log("Saving settings....");
       return await writeFile(
         SETTINGS_FILE,
         JSON.stringify(this.$state, null, 4)
@@ -111,28 +175,28 @@ export const useSettings = defineStore(name, {
         );
       }
     },
-    async getChangelogPages() {
-      const data = await fetch("XXX").catch((err) => {
-        console.error(err);
-      });
-      // @ts-ignore
-      return data.text();
-    },
-    async preloadChangelogPages() {
-      const pages = await this.getChangelogPages();
-      try {
-        let temp = JSON.parse(pages);
-      } catch (err) {
-        console.log(pages);
-        console.log(err);
-      }
-      if (exists(APPDATA_FOLDER) && pages) {
-        return await writeFile(
-          CHANGELOG_FILE,
-          // @ts-ignore
-          JSON.stringify(JSON.parse(pages), null, 4)
-        );
-      }
-    },
+    // async getChangelogPages() {
+    //   const data = await fetch("XXX").catch((err) => {
+    //     console.error(err);
+    //   });
+    //   // @ts-ignore
+    //   return data.text();
+    // },
+    // async preloadChangelogPages() {
+    //   const pages = await this.getChangelogPages();
+    //   try {
+    //     let temp = JSON.parse(pages);
+    //   } catch (err) {
+    //     console.log(pages);
+    //     console.log(err);
+    //   }
+    //   if (exists(APPDATA_FOLDER) && pages) {
+    //     return await writeFile(
+    //       CHANGELOG_FILE,
+    //       // @ts-ignore
+    //       JSON.stringify(JSON.parse(pages), null, 4)
+    //     );
+    //   }
+    // },
   },
 });

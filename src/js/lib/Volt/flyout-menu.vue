@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * Should prop types be moved to the types declarations?
+ */
+
 import { computed, onMounted, watch, nextTick } from "vue";
 import type { Ref } from 'vue'
 import type { FlyoutMenuItem, FlyoutMenu } from './types'
