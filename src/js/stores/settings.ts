@@ -70,6 +70,9 @@ export const useSettings = defineStore(name, {
           empty: false,
         },
         fill: {
+          // The active color would be the [0] index when it exists.
+          // It'd be nicer to hook this into a getter for active color,
+          // and allow an array entry here to compensate all data
           color: {
             red: 0,
             green: 150,
@@ -112,7 +115,22 @@ export const useSettings = defineStore(name, {
         } as swatchList,
       ],
     } as SettingsStore),
-  getters: {},
+  getters: {
+    fillIsEmpty(state) {
+      return (
+        state.indicator.fill.color &&
+        state.indicator.fill.color.typename &&
+        /nocolor/i.test(state.indicator.fill.color.typename)
+      );
+    },
+    strokeIsEmpty(state) {
+      return (
+        state.indicator.stroke.color &&
+        state.indicator.stroke.color.typename &&
+        /nocolor/i.test(state.indicator.stroke.color.typename)
+      );
+    },
+  },
   actions: {
     async init() {
       console.log("SETTINGS INIT");

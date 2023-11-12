@@ -20,6 +20,20 @@ export interface hsbColor {
   brightness: number;
   typename?: string;
 }
+export interface noColor {
+  typename?: string;
+}
+export interface multiColor {
+  typename?: string;
+}
+
+export interface gradientStop {
+  typename?: string;
+  color: rgbColor | cmykColor | hsbColor;
+}
+export interface gradientColor {
+  stops: gradientStop[];
+}
 
 export interface ColorPackage {
   RGB: rgbColor;
@@ -30,4 +44,4 @@ export interface ColorPackage {
   name?: string;
 }
 
-export type ColorValue = rgbColor | cmykColor | hsbColor;
+export type ColorValue = rgbColor | cmykColor | hsbColor | noColor | multiColor;
