@@ -25,7 +25,7 @@ interface swatchUI extends swatch {
   color: ColorValue
 }
 
-const UIList = computed(() => settings.activeList.swatches.map((v: ColorValue | swatch): swatchUI => {
+const UIList = computed(() => settings.filteredActiveList.map((v: ColorValue | swatch): swatchUI => {
   const temp = {
     color: (v as swatch).color || (v as ColorValue),
     hover: false // Completely redundant
@@ -56,7 +56,6 @@ const checkIfColorActive = (color: ColorValue): boolean => {
 const checkIfColorActiveStroke = (color: ColorValue): boolean => {
   return JSON.stringify(color) == JSON.stringify(settings.strokeColor) && !settings.strokeIsEmpty && !settings.strokeIsMulti
 }
-
 
 const handleWindowResize = debounce(() => {
   resetSwatchListHeight();

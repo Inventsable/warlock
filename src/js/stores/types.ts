@@ -9,19 +9,25 @@ export interface SettingsStore {
     isCMYK: boolean;
     activeIndex: number;
     includeIndicatorInDeepScan: boolean;
+    displayTooltipOnSwatch: boolean;
+    displayColorModeInTooltip: boolean;
+    displayCountInTooltip: boolean;
+  };
+  filters: {
+    indicatorsOnTop: boolean;
+    byHue: boolean;
+    bySaturation: boolean;
+    byFrequency: boolean;
+    reversed: boolean;
   };
   indicator: {
     show: boolean;
     stroke: {
       active: boolean;
       colors: ColorValue[];
-      multi: boolean;
-      empty: boolean;
     };
     fill: {
       colors: ColorValue[];
-      multi: boolean;
-      empty: boolean;
     };
   };
   lists: swatchList[];
@@ -40,6 +46,8 @@ export interface swatch {
   name?: string;
   color: ColorValue;
   index: number;
+  count?: number;
+  types: string[];
 }
 
 export interface swatchList {

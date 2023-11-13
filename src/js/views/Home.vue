@@ -15,17 +15,13 @@ import { path } from "../lib/cep/node";
 import { exists } from "../lib/utils/fs";
 import type { ColorValue } from "../../shared/shared";
 
-// @ts-ignore
+// @ts-ignore - These don't have explicit types since the file is from Adobe
 import { AIEvent, AIEventAdapter } from '../main/BoltHostAdapter.js'
 import { SystemPath } from "../lib/cep/csinterface";
 import { appThemeChanged } from "../lib/utils/theme-manager";
 
 const adapter = AIEventAdapter.getInstance();
 const settings = useSettings()
-
-const run = async (): Promise<void | null> => {
-  // const diagnostic = JSON.parse(await evalES(`runDiagnostic()`));
-}
 
 const showIndicator = computed({
   get() {
@@ -36,41 +32,68 @@ const showIndicator = computed({
   }
 })
 
-const context = ref([
-  {
-    label: "Show indicator",
-    checked: showIndicator.value,
-    checkable: true,
-    enabled: true,
-    id: "showIndicator"
-  },
-  {
-    label: "Delete AppData",
-    callback: () => {
-      settings.deleteSettings()
-      console.log("Local settings deleted")
-    }
-  },
-  {
-    label: "Delete local storage",
-    callback: () => {
-      window.localStorage.removeItem("settings");
-      console.log("Local storage deleted")
-    }
-  },
-])
+
+/** DOCUMENT SCANNING */
+type ColorData = {
+  [key: string]: number | string;
+  typename: string;
+};
+
+type InputItem = {
+  data: ColorData;
+  type: string;
+};
+
+type ResultItem = {
+  color: ColorData;
+  types: string[];
+  count: number;
+};
+
+const mergeColorsReducer = (
+  accumulator: ResultItem[],
+  currentItem: InputItem
+): ResultItem[] => {
+  if (currentItem.data.typename === 'NoColor') {
+    return accumulator;
+  }
+  const existingItem = accumulator.find(
+    (item) => JSON.stringify(item.color) === JSON.stringify(currentItem.data)
+  );
+  if (existingItem) {
+    if (!existingItem.types.includes(currentItem.type)) existingItem.types.push(currentItem.type);
+    existingItem.count += 1;
+  } else {
+    accumulator.push({
+      color: currentItem.data,
+      types: [currentItem.type],
+      count: 1,
+    });
+  }
+  return accumulator;
+};
+
 
 const documentScan = async () => {
-  console.log("Scan document")
+  // console.log("Scan document")
   const result = JSON.parse(await evalES(`deepScan('${JSON.stringify(settings.deepScanOptions)}')`));
-  // console.log(result);
-  const colors = result.colors.filter((v: ColorValue, i: number, a: ColorValue[]) => {
-    return a.findIndex((el: ColorValue) => JSON.stringify(el) == JSON.stringify(v)) == i;
-  }).filter((v: ColorValue) => v.typename && !/nocolor/i.test(v.typename))
-  // console.log(colors);
-  settings.setHardList(colors);
+  // console.log(result.colors);
+  const finalList: ResultItem[] = result.colors.reduce(mergeColorsReducer, []);
+  // console.log(finalList);
+  settings.setHardList(finalList);
+
+  // const colors = result.colors.filter((v: ColorValue, i: number, a: ColorValue[]) => {
+  //   return a.findIndex((el: ColorValue) => JSON.stringify(el) == JSON.stringify(v)) == i;
+  // }).filter((v: ColorValue) => v.typename && !/nocolor/i.test(v.typename))
+  // // console.log(colors);
+  // settings.setHardList(colors);
 }
 
+/** SELECTION SCANNING */
+
+const syncToAppIndicator = async (): Promise<void> => {
+  settings.indicator.stroke.active = /false/i.test(await evalES(`checkFillStroke()`))
+}
 /**
  * Only trigger on a selection change as a shallow and lightweight look at selected objects
  */
@@ -127,6 +150,73 @@ const shallowScan = async () => {
   // 
 }
 
+/** CONTEXT / FLYOUT MENUS */
+const context = ref([
+  {
+    label: "Show indicator",
+    checked: showIndicator.value,
+    checkable: true,
+    enabled: true,
+    id: "showIndicator"
+  },
+  {
+    label: 'Filters',
+    menu: [
+      {
+        label: 'Actives always on top',
+        checkable: true,
+        checked: settings.filters.indicatorsOnTop,
+        callback: () => {
+          settings.filters.indicatorsOnTop = !settings.filters.indicatorsOnTop;
+        }
+      },
+      {
+        label: '---'
+      },
+      {
+        label: 'Sort by hue',
+        checkable: true,
+        checked: settings.hueFilter,
+        callback: () => {
+          settings.toggleSortByHue(!settings.filters.byHue);
+        }
+      },
+      {
+        label: 'Sort by saturation',
+        checkable: true,
+        checked: settings.saturationFilter,
+        callback: () => {
+          settings.toggleSortBySaturation(!settings.filters.bySaturation);
+        }
+      },
+      {
+        label: 'Sort by frequency',
+        checkable: true,
+        checked: () => settings.frequencyFilter,
+        callback: () => {
+          settings.toggleSortByFrequency(!settings.filters.byFrequency);
+        }
+      }
+    ]
+  },
+  {
+    label: '---'
+  },
+  {
+    label: "Delete AppData",
+    callback: () => {
+      settings.deleteSettings()
+      console.log("Local settings deleted")
+    }
+  },
+  {
+    label: "Delete local storage",
+    callback: () => {
+      window.localStorage.removeItem("settings");
+      console.log("Local storage deleted")
+    }
+  },
+])
 /**
  * Used to bypass update:modelValue failing to echo with computed getter
  */
@@ -135,6 +225,8 @@ const checkClick = (item: ContextMenuItem | ContextMenuItemProp) => {
     showIndicator.value = !item.checked
   }
 }
+
+/** MISC */
 
 const checkForHostAdapterInFilepath = () => {
   const appFolder = csi.getSystemPath(SystemPath.HOST_APPLICATION);
@@ -145,9 +237,7 @@ const checkForHostAdapterInFilepath = () => {
   return doesExist;
 }
 
-const syncToAppIndicator = async (): Promise<void> => {
-  settings.indicator.stroke.active = /false/i.test(await evalES(`checkFillStroke()`))
-}
+/** LIFECYCLE HOOKS */
 
 onBeforeMount(async () => {
   const adapterOnline = checkForHostAdapterInFilepath();

@@ -52,12 +52,16 @@ export const useSettings = defineStore(name, {
         byHue: false,
         bySaturation: true,
         byFrequency: false,
+        reversed: false,
       },
       options: {
         locked: false,
         isCMYK: false,
         activeIndex: 0,
         includeIndicatorInDeepScan: true,
+        displayTooltipOnSwatch: false,
+        displayColorModeInTooltip: false,
+        displayCountInTooltip: false,
       },
       adapter: {
         online: false,
@@ -75,23 +79,19 @@ export const useSettings = defineStore(name, {
           colors: [
             {
               red: 255,
-              green: 0,
-              blue: 0,
+              green: 255,
+              blue: 255,
             } as ColorValue,
           ],
-          multi: false,
-          empty: false,
         },
         fill: {
           colors: [
             {
-              red: 0,
-              green: 150,
-              blue: 150,
+              red: 255,
+              green: 255,
+              blue: 255,
             } as ColorValue,
           ],
-          multi: false,
-          empty: false,
         },
       },
       lists: [
@@ -99,97 +99,126 @@ export const useSettings = defineStore(name, {
           name: "foo",
           index: 0,
           swatches: [
-            {
-              color: {
-                red: 255,
-                green: 0,
-                blue: 0,
-                typename: "RGBColor",
-              } as ColorValue,
-              index: 0,
-            } as swatch,
-            {
-              color: {
-                red: 0,
-                green: 150,
-                blue: 150,
-                typename: "RGBColor",
-              } as ColorValue,
-              index: 1,
-            } as swatch,
-            {
-              color: {
-                red: 100,
-                green: 0,
-                blue: 100,
-                typename: "RGBColor",
-              } as ColorValue,
-              index: 2,
-            } as swatch,
-            {
-              color: {
-                angle: 0,
-                hiliteAngle: 0,
-                hiliteLength: 0,
-                length: 1,
-                matrix: {
-                  mValueA: 1,
-                  mValueB: 0,
-                  mValueC: 0,
-                  mValueD: 1,
-                  mValueTX: 0,
-                  mValueTY: 0,
-                  typename: "Matrix",
-                },
-                origin: [0, 0],
-                typename: "GradientColor",
-                gradient: {
-                  name: "Unnamed gradient",
-                  type: {
-                    linear: true,
-                    radial: false,
-                  },
-                  typename: "Gradient",
-                  gradientStops: [
-                    {
-                      color: {
-                        gray: 100,
-                        typename: "GrayColor",
-                      },
-                      midPoint: 50,
-                      opacity: 100,
-                      rampPoint: 100,
-                      typename: "GradientStop",
-                    },
-                    {
-                      color: {
-                        gray: 0,
-                        typename: "GrayColor",
-                      },
-                      midPoint: 50,
-                      opacity: 100,
-                      rampPoint: 0,
-                      typename: "GradientStop",
-                    },
-                  ],
-                },
-              },
-              index: 3,
-            } as swatch,
-            {
-              color: {
-                red: 70,
-                green: 160,
-                blue: 245,
-                typename: "RGBColor",
-              } as ColorValue,
-              index: 4,
-            } as swatch,
+            // {
+            //   color: {
+            //     red: 255,
+            //     green: 0,
+            //     blue: 0,
+            //     typename: "RGBColor",
+            //   } as ColorValue,
+            //   index: 0,
+            // } as swatch,
+            // {
+            //   color: {
+            //     red: 0,
+            //     green: 150,
+            //     blue: 150,
+            //     typename: "RGBColor",
+            //   } as ColorValue,
+            //   index: 1,
+            // } as swatch,
+            // {
+            //   color: {
+            //     red: 100,
+            //     green: 0,
+            //     blue: 100,
+            //     typename: "RGBColor",
+            //   } as ColorValue,
+            //   index: 2,
+            // } as swatch,
+            // {
+            //   color: {
+            //     angle: 0,
+            //     hiliteAngle: 0,
+            //     hiliteLength: 0,
+            //     length: 1,
+            //     matrix: {
+            //       mValueA: 1,
+            //       mValueB: 0,
+            //       mValueC: 0,
+            //       mValueD: 1,
+            //       mValueTX: 0,
+            //       mValueTY: 0,
+            //       typename: "Matrix",
+            //     },
+            //     origin: [0, 0],
+            //     typename: "GradientColor",
+            //     gradient: {
+            //       name: "Unnamed gradient",
+            //       type: {
+            //         linear: true,
+            //         radial: false,
+            //       },
+            //       typename: "Gradient",
+            //       gradientStops: [
+            //         {
+            //           color: {
+            //             gray: 100,
+            //             typename: "GrayColor",
+            //           },
+            //           midPoint: 50,
+            //           opacity: 100,
+            //           rampPoint: 100,
+            //           typename: "GradientStop",
+            //         },
+            //         {
+            //           color: {
+            //             gray: 0,
+            //             typename: "GrayColor",
+            //           },
+            //           midPoint: 50,
+            //           opacity: 100,
+            //           rampPoint: 0,
+            //           typename: "GradientStop",
+            //         },
+            //       ],
+            //     },
+            //   },
+            //   index: 3,
+            // } as swatch,
+            // {
+            //   color: {
+            //     red: 70,
+            //     green: 160,
+            //     blue: 245,
+            //     typename: "RGBColor",
+            //   } as ColorValue,
+            //   index: 4,
+            // } as swatch,
           ],
         } as swatchList,
       ],
     } as SettingsStore),
   getters: {
+    hueFilter(state) {
+      return state.filters.byHue;
+    },
+    saturationFilter(state) {
+      return state.filters.bySaturation;
+    },
+    frequencyFilter(state) {
+      return state.filters.byFrequency;
+    },
+    filteredActiveList(state) {
+      const list = state.lists[state.options.activeIndex].swatches.slice();
+      list.sort((a: swatch, b: swatch) => {
+        const aS = getVerbosePackage(a),
+          bS = getVerbosePackage(b);
+        if (state.filters.indicatorsOnTop) {
+          if (a.color == this.fillColor || a.color == this.strokeColor)
+            return -1;
+        }
+        if (state.filters.byHue) {
+          return aS.HSB.hue - bS.HSB.hue;
+        } else if (state.filters.bySaturation) {
+          return aS.HSB.saturation - bS.HSB.saturation;
+        } else if (state.filters.byFrequency) {
+          return a.count - b.count;
+        }
+      });
+      console.log(list);
+      return state.filters.reversed ? list.reverse() : list;
+    },
     deepScanOptions(state) {
       return {
         includeIndicator: state.options.includeIndicatorInDeepScan,
@@ -259,6 +288,39 @@ export const useSettings = defineStore(name, {
     },
   },
   actions: {
+    toggleSortByFrequency(value: boolean) {
+      if (value) {
+        this.$state.filters.byHue = false;
+        this.$state.filters.bySaturation = false;
+        this.$state.filters.byFrequency = true;
+      } else {
+        this.$state.filters.byHue = false;
+        this.$state.filters.bySaturation = false;
+        this.$state.filters.byFrequency = false;
+      }
+    },
+    toggleSortByHue(value: boolean) {
+      if (value) {
+        this.$state.filters.byHue = true;
+        this.$state.filters.bySaturation = false;
+        this.$state.filters.byFrequency = false;
+      } else {
+        this.$state.filters.byHue = false;
+        this.$state.filters.bySaturation = false;
+        this.$state.filters.byFrequency = false;
+      }
+    },
+    toggleSortBySaturation(value: boolean) {
+      if (value) {
+        this.$state.filters.byHue = false;
+        this.$state.filters.bySaturation = true;
+        this.$state.filters.byFrequency = false;
+      } else {
+        this.$state.filters.byHue = false;
+        this.$state.filters.bySaturation = false;
+        this.$state.filters.byFrequency = false;
+      }
+    },
     setHardList(value: ColorValue[] | swatch[]) {
       const list = this.$state.lists[this.$state.options.activeIndex].swatches;
       for (let i = list.length - 1; i >= 0; i--) {

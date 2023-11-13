@@ -33,6 +33,7 @@ function refresh() {
 }
 
 .version-toolbar {
+  user-select: none;
   position: absolute;
   bottom: 0px;
   right: 0px;

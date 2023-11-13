@@ -1,3 +1,10 @@
+/**
+ * TODO
+ *
+ * - Text color is not picked up by panel
+ * - Eyedropper events should be used for scans if not triggering Selection
+ */
+
 import type {
   ColorValue,
   rgbColor,
@@ -32,16 +39,10 @@ export const shallowScanItem = (
     if (item.fillColor) {
       if (!ArrayIncludes(fillChain, getColor(item.fillColor)))
         fillChain.push(getColor(item.fillColor));
-      // else {
-      //   fillChain = incrementCount(fillChain, item.fillColor);
-      // }
     }
     if (item.strokeColor) {
       if (!ArrayIncludes(strokeChain, getColor(item.strokeColor)))
         strokeChain.push(getColor(item.strokeColor));
-      // else {
-      //   strokeChain = incrementCount(strokeChain, item.strokeColor);
-      // }
     }
   }
   if (item.pathItems && item.pathItems.length) {
@@ -67,12 +68,12 @@ export const shallowScanItem = (
 export const deepScanItem = (item: any, colorChain: any[]) => {
   if (item.fillColor || item.strokeColor) {
     if (item.fillColor) {
-      if (!ArrayIncludes(colorChain, getColor(item.fillColor)))
-        colorChain.push(getColor(item.fillColor));
+      // if (!ArrayIncludes(colorChain, getColor(item.fillColor)))
+      colorChain.push({ data: getColor(item.fillColor), type: "fill" });
     }
     if (item.strokeColor) {
-      if (!ArrayIncludes(colorChain, getColor(item.strokeColor)))
-        colorChain.push(getColor(item.strokeColor));
+      // if (!ArrayIncludes(colorChain, getColor(item.strokeColor)))
+      colorChain.push({ data: getColor(item.strokeColor), type: "stroke" });
     }
   }
   if (item.pathItems && item.pathItems.length) {
@@ -160,8 +161,14 @@ export const deepScan = (cfg: string) => {
     colorChain = result;
   }
   if (config.includeIndicator) {
-    colorChain.push(getColor(app.activeDocument.defaultFillColor));
-    colorChain.push(getColor(app.activeDocument.defaultStrokeColor));
+    colorChain.push({
+      data: getColor(app.activeDocument.defaultFillColor),
+      type: "fill",
+    });
+    colorChain.push({
+      data: getColor(app.activeDocument.defaultStrokeColor),
+      type: "stroke",
+    });
   }
   return JSON.stringify({
     colors: colorChain as ColorValue[],
