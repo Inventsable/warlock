@@ -115,11 +115,69 @@ export const useSettings = defineStore(name, {
               } as ColorValue,
               index: 2,
             } as swatch,
+            {
+              color: {
+                angle: 0,
+                hiliteAngle: 0,
+                hiliteLength: 0,
+                length: 1,
+                matrix: {
+                  mValueA: 1,
+                  mValueB: 0,
+                  mValueC: 0,
+                  mValueD: 1,
+                  mValueTX: 0,
+                  mValueTY: 0,
+                  typename: "Matrix",
+                },
+                origin: [0, 0],
+                typename: "GradientColor",
+                gradient: {
+                  name: "Unnamed gradient",
+                  type: {
+                    linear: true,
+                    radial: false,
+                  },
+                  typename: "Gradient",
+                  gradientStops: [
+                    {
+                      color: {
+                        gray: 100,
+                        typename: "GrayColor",
+                      },
+                      midPoint: 50,
+                      opacity: 100,
+                      rampPoint: 100,
+                      typename: "GradientStop",
+                    },
+                    {
+                      color: {
+                        gray: 0,
+                        typename: "GrayColor",
+                      },
+                      midPoint: 50,
+                      opacity: 100,
+                      rampPoint: 0,
+                      typename: "GradientStop",
+                    },
+                  ],
+                },
+              },
+              index: 3,
+            } as swatch,
           ],
         } as swatchList,
       ],
     } as SettingsStore),
   getters: {
+    fillIsGradient(state) {
+      return (
+        state.indicator.fill.colors &&
+        state.indicator.fill.colors.length == 1 &&
+        state.indicator.fill.colors[0].typename &&
+        /gradient/i.test(state.indicator.fill.colors[0].typename)
+      );
+    },
     fillIsEmpty(state) {
       return (
         state.indicator.fill.colors &&
@@ -147,6 +205,14 @@ export const useSettings = defineStore(name, {
         state.indicator.stroke.colors.length == 1 &&
         state.indicator.stroke.colors[0].typename &&
         /nocolor/i.test(state.indicator.stroke.colors[0].typename)
+      );
+    },
+    strokeIsGradient(state) {
+      return (
+        state.indicator.stroke.colors &&
+        state.indicator.stroke.colors.length == 1 &&
+        state.indicator.stroke.colors[0].typename &&
+        /gradient/i.test(state.indicator.stroke.colors[0].typename)
       );
     },
     strokeColor(state) {

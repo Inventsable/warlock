@@ -1,20 +1,42 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { StyleValue, computed } from 'vue';
 import { useSettings } from '../../stores/settings';
 import { getVerbosePackage } from '../utils/app';
+import { gradientColor } from '../../../shared/shared';
 
 const settings = useSettings();
 
 const showFillMulti = computed(() => settings.fillIsMulti),
   showFillNone = computed(() => settings.fillIsEmpty),
-  showFillBG = computed(() => !settings.fillIsEmpty && !settings.fillIsMulti);
+  showFillBG = computed(() => !settings.fillIsEmpty && !settings.fillIsMulti && !settings.fillIsGradient),
+  showFillGradient = computed(() => !settings.fillIsEmpty && !settings.fillIsMulti && settings.fillIsGradient);
+
 
 const showStrokeMulti = computed(() => settings.strokeIsMulti),
   showStrokeNone = computed(() => settings.strokeIsEmpty),
-  showStrokeBG = computed(() => !settings.strokeIsEmpty && !settings.strokeIsMulti);
+  showStrokeBG = computed(() => !settings.strokeIsEmpty && !settings.strokeIsMulti && !settings.strokeIsGradient),
+  showStrokeGradient = computed(() => !settings.strokeIsEmpty && !settings.strokeIsMulti && settings.strokeIsGradient)
 
-const fillBGColor = computed(() => getVerbosePackage(settings.fillColor).hex),
-  strokeBGColor = computed(() => getVerbosePackage(settings.strokeColor).hex);
+const fillBGColor = computed(() => !settings.fillIsGradient ? getVerbosePackage(settings.fillColor).hex : "#000"),
+  strokeBGColor = computed(() => !settings.strokeIsGradient ? getVerbosePackage(settings.strokeColor).hex : "#000");
+
+
+const getGradientStyle = (color: gradientColor): StyleValue => {
+  const isAbove180 = color.angle + 90 > 180;
+  const angle = (color.angle - 90)
+  let str = `fill: ${color.gradient.type.linear ? 'linear-gradient(' : 'radial-gradient('}`
+  str += `${angle}deg,`
+  for (let i = 0; i < color.gradient.gradientStops.length; i++) {
+    const gStop = color.gradient.gradientStops[i];
+    const gRGB = getVerbosePackage(gStop.color).RGB;
+    const doesContinue = i < color.gradient.gradientStops.length - 1;
+    str += ` rgba(${gRGB.red}, ${gRGB.green}, ${gRGB.blue}, ${gStop.opacity}) ${gStop.rampPoint}%${doesContinue ? "," : ""} ${doesContinue ? `${gStop.midPoint}%,` : ""}`.trimEnd()
+  }
+  str += ');'
+  console.log(str)
+  return str;
+}
+
 </script>
 
 <template>
@@ -25,6 +47,8 @@ const fillBGColor = computed(() => getVerbosePackage(settings.fillColor).hex),
         <rect class="indicator-fill" v-if="showFillBG" :style="{
           fill: fillBGColor
         }" width="36" height="36" />
+        <rect class="indicator-fill svg-gradient" v-if="showFillGradient"
+          :style="getGradientStyle(settings.fillColor as gradientColor)" width="36" height="36" />
         <g id="fillMulti" v-if="showFillMulti">
           <g id="fillBGLock">
             <rect x="0.5" y="0.5" class="indicator-none-fill" width="35" height="35" />
@@ -44,6 +68,8 @@ const fillBGColor = computed(() => getVerbosePackage(settings.fillColor).hex),
         <g id="fillFrame">
           <rect x="0" y="0" class="indicator-stroke-shim svg-no-fill" width="36" height="36" />
           <rect x="1.2" y="1.2" v-if="showFillBG" class="indicator-stroke-pad svg-no-fill" width="33.6" height="33.6" />
+          <rect x="1.2" y="1.2" v-if="showFillGradient" class="indicator-stroke-pad svg-no-fill" width="33.6"
+            height="33.6" />
         </g>
       </g>
       <g id="stroke" :style="{
@@ -53,6 +79,12 @@ const fillBGColor = computed(() => getVerbosePackage(settings.fillColor).hex),
           <rect x="18.5" y="18.5" :style="{
             fill: strokeBGColor
           }" width="35" height="35" />
+          <rect x="28.1" y="28.1" class="indicator-stroke-center indicator-stroke-pad" width="15.8" height="15.8" />
+          <rect x="29.1" y="29.1" class="indicator-stroke-shim" width="13.8" height="13.8" />
+          <!-- <path d="M53,19v34H19V19H53 M54,18H18v36h36V18L54,18z" /> -->
+        </g>
+        <g id="strokeBG" v-if="showStrokeGradient">
+          <rect x="18.5" y="18.5" class="svg-gradient" width="35" height="35" />
           <rect x="28.1" y="28.1" class="indicator-stroke-center indicator-stroke-pad" width="15.8" height="15.8" />
           <rect x="29.1" y="29.1" class="indicator-stroke-shim" width="13.8" height="13.8" />
           <!-- <path d="M53,19v34H19V19H53 M54,18H18v36h36V18L54,18z" /> -->
@@ -107,6 +139,8 @@ const fillBGColor = computed(() => getVerbosePackage(settings.fillColor).hex),
         <rect class="indicator-fill" v-if="showFillBG" :style="{
           fill: fillBGColor
         }" width="36" height="36" />
+        <rect class="indicator-fill svg-gradient" v-if="showFillGradient"
+          :style="getGradientStyle(settings.fillColor as gradientColor)" width="36" height="36" />
         <g id="fillMulti" v-if="showFillMulti">
           <g id="fillBGLock">
             <rect x="0.5" y="0.5" class="indicator-none-fill" width="35" height="35" />
@@ -127,6 +161,8 @@ const fillBGColor = computed(() => getVerbosePackage(settings.fillColor).hex),
           <!-- <path d="M35,1v34H1V1H35 M36,0H0v36h36V0L36,0z" /> -->
           <rect x="0" y="0" class="indicator-stroke-shim svg-no-fill" width="36" height="36" />
           <rect x="1.2" y="1.2" v-if="showFillBG" class="indicator-stroke-pad svg-no-fill" width="33.6" height="33.6" />
+          <rect x="1.2" y="1.2" v-if="showFillGradient" class="indicator-stroke-pad svg-no-fill" width="33.6"
+            height="33.6" />
         </g>
       </g>
     </svg>

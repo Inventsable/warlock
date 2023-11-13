@@ -28,6 +28,7 @@ export interface noColor {
   typename?: string;
 }
 export interface grayColor {
+  gray: number;
   count?: number;
   typename?: string;
 }
@@ -55,13 +56,22 @@ export interface gradient {
   typename: string;
 }
 
+export interface gradientMatrix {
+  mValueA: number;
+  mValueB: number;
+  mValueC: number;
+  mValueD: number;
+  mValueTX: number;
+  mValueTY: number;
+}
+
 export interface gradientColor {
   angle: number;
   gradient: gradient;
   hiliteAngle: number;
   hiliteLength: number;
   length: number;
-  matrix: any;
+  matrix: gradientMatrix;
   origin: number[];
   typename: string;
 }

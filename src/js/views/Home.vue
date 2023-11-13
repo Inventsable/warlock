@@ -71,6 +71,11 @@ const shallowScan = async () => {
     if (/rgb|cmyk|nocolor/i.test(result.appFill.typename)) {
       // Rewrite all fills to a single entry array with current value:
       settings.setHardFill(result.appFill);
+    } else if (/gradient/i.test(result.appFill.typename)) {
+      console.log("Warlock can't support gradient colors yet:")
+      console.log(result.appFill)
+      settings.setHardFill(result.appFill);
+
     } else {
       // Otherwise something went haywire and isn't accounted for:
       console.log("Something is up with fill:")
@@ -79,6 +84,9 @@ const shallowScan = async () => {
     if (/rgb|cmyk|nocolor/i.test(result.appStroke.typename)) {
       // Rewrite all stroke to a single entry array with current value:
       settings.setHardStroke(result.appStroke)
+    } else if (/gradient/i.test(result.appStroke.typename)) {
+      console.log("Warlock can't support gradient colors yet:")
+      console.log(result.appStroke)
     } else {
       // Otherwise something went haywire and isn't accounted for:
       console.log("Something is up with stroke:")
@@ -163,13 +171,13 @@ onBeforeMount(async () => {
     //   console.log(e);
     // });
   }
-  console.log("Sync to indicator")
-  await syncToAppIndicator();
 })
 
 onMounted(async () => {
+  console.log("Sync to indicator")
+  await syncToAppIndicator();
+  await shallowScan();
   console.log("Mounted")
-
   // For testing
   // const result = JSON.parse(await evalES(`getActiveFillColor()`))
   // console.log(result);

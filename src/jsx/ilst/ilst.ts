@@ -7,6 +7,8 @@ import type {
   hsbColor,
   ScriptScanResult,
   gradientColor,
+  gradientStop,
+  gradient,
 } from "../../shared/shared";
 
 export const checkFillStroke = (): boolean => {
@@ -27,15 +29,15 @@ export const shallowScanItem = (
 ) => {
   if (item.fillColor || item.strokeColor) {
     if (item.fillColor) {
-      if (!ArrayIncludes(fillChain, item.fillColor))
-        fillChain.push(JSON.parse(JSON.stringify(item.fillColor)));
+      if (!ArrayIncludes(fillChain, getColor(item.fillColor)))
+        fillChain.push(getColor(item.fillColor));
       // else {
       //   fillChain = incrementCount(fillChain, item.fillColor);
       // }
     }
     if (item.strokeColor) {
-      if (!ArrayIncludes(strokeChain, item.strokeColor))
-        strokeChain.push(item.strokeColor);
+      if (!ArrayIncludes(strokeChain, getColor(item.strokeColor)))
+        strokeChain.push(getColor(item.strokeColor));
       // else {
       //   strokeChain = incrementCount(strokeChain, item.strokeColor);
       // }
@@ -62,7 +64,41 @@ export const shallowScanItem = (
 };
 
 export const getSanitizedGradient = (color: gradientColor) => {
-  //
+  const grad = {
+    name: color.gradient.name,
+    type: {
+      linear: /linear/i.test(color.gradient.type + ""),
+      radial: /radial/i.test(color.gradient.type + ""),
+    },
+    typename: color.gradient.typename,
+    gradientStops: [] as gradientStop[],
+  } as gradient;
+  for (let i = color.gradient.gradientStops.length - 1; i >= 0; i--) {
+    const gStop = color.gradient.gradientStops[i];
+    grad.gradientStops.push({
+      color: gStop.color,
+      midPoint: gStop.midPoint,
+      opacity: gStop.opacity,
+      rampPoint: gStop.rampPoint,
+      typename: gStop.typename,
+    } as gradientStop);
+  }
+  return {
+    angle: color.angle,
+    hiliteAngle: color.hiliteAngle,
+    hiliteLength: color.hiliteLength,
+    length: color.length,
+    matrix: color.matrix,
+    origin: color.origin,
+    typename: color.typename,
+    gradient: grad,
+  } as gradientColor;
+};
+
+export const getColor = (color: ColorValue) => {
+  if (/gradient/i.test(color + ""))
+    return getSanitizedGradient(color as gradientColor);
+  else return color;
 };
 
 export const shallowScan = () => {
@@ -70,8 +106,8 @@ export const shallowScan = () => {
     return JSON.stringify({
       hasSelection: false,
       selectionLength: 0,
-      appFill: app.activeDocument.defaultFillColor,
-      appStroke: app.activeDocument.defaultStrokeColor,
+      appFill: getColor(app.activeDocument.defaultFillColor),
+      appStroke: getColor(app.activeDocument.defaultStrokeColor),
     } as ScriptScanResult);
   }
   let fillChain: any[] = [],
@@ -90,9 +126,7 @@ export const shallowScan = () => {
 };
 
 export const getActiveFillColor = () => {
-  return JSON.stringify(
-    JSON.parse(JSON.stringify(app.activeDocument.defaultFillColor))
-  );
+  return JSON.stringify(getColor(app.activeDocument.defaultFillColor));
 };
 
 //

@@ -4,8 +4,7 @@ import {
   hsbColor,
   ColorValue,
   ColorPackage,
-  DocumentDiagonostic,
-  Config,
+  grayColor,
 } from "../../../shared/shared";
 
 export const getVerbosePackage = (
@@ -16,6 +15,7 @@ export const getVerbosePackage = (
     if (Object.keys(val).includes("cyan")) colorModel = "CMYK";
     else if (Object.keys(val).includes("hue")) colorModel = "HSB";
     else if (Object.keys(val).includes("red")) colorModel = "RGB";
+    else if (Object.keys(val).includes("gray")) colorModel = "GRAY";
     else colorModel = "UNKNOWN";
   }
   const result = {
@@ -48,6 +48,18 @@ export const getVerbosePackage = (
     result.HSB = convertRGBToHSB(val as rgbColor);
     result.CMYK = convertRGBToCMYK(val as rgbColor);
     result.hex = convertRGBToHex(val as rgbColor);
+  } else if (
+    colorModel == "GRAY" &&
+    (val as grayColor).hasOwnProperty("gray")
+  ) {
+    result.RGB = {
+      red: ((val as grayColor).gray / 100) * 255,
+      green: ((val as grayColor).gray / 100) * 255,
+      blue: ((val as grayColor).gray / 100) * 255,
+    } as rgbColor;
+    result.HSB = convertRGBToHSB(result.RGB as rgbColor);
+    result.CMYK = convertRGBToCMYK(result.RGB as rgbColor);
+    result.hex = convertRGBToHex(result.RGB as rgbColor);
   }
   return result;
 };
