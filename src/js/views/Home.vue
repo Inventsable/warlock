@@ -211,7 +211,9 @@ onMounted(async () => {
   --color-warning: #FFEE00;
 }
 
-.home-content {}
+.home-content {
+  overflow-y: hidden;
+}
 
 .panel-content {
   margin: 6px 0px;

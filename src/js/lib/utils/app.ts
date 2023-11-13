@@ -95,6 +95,20 @@ export const setCSS = (prop: string, data: string): void => {
   document.documentElement.style.setProperty(prop, data);
 };
 
+export const debounce = <T extends (...args: any[]) => void>(
+  func: T,
+  delay: number
+) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+    const context = this;
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func.apply(context, args);
+    }, delay);
+  };
+};
+
 export function convertRGBToHSB(rgb: rgbColor): hsbColor {
   const r = rgb.red / 255,
     g = rgb.green / 255,

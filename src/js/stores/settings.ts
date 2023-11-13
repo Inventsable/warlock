@@ -47,6 +47,12 @@ export const useSettings = defineStore(name, {
       selection: {
         length: 0,
       },
+      filters: {
+        indicatorsOnTop: true,
+        byHue: false,
+        bySaturation: true,
+        byFrequency: false,
+      },
       options: {
         locked: false,
         isCMYK: false,

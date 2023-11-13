@@ -14,14 +14,39 @@ function refresh() {
 <template>
   <div class="panel-content">
     <router-view />
+    <div class="version-toolbar">
+      0.0.1
+    </div>
   </div>
 </template>
 
 <style>
+:root {
+  --version-height: 20px;
+  --extra-padding: 20px;
+}
+
 .panel-content {
   box-sizing: border-box;
   margin: 6px;
   height: calc(100vh - 12px)
+}
+
+.version-toolbar {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  width: 100vw;
+  box-sizing: border-box;
+  letter-spacing: 0.25ch;
+  background-color: var(--color-header);
+  color: var(--color-checkbox-disabled);
+  max-height: var(--version-height);
+  font-size: 9px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 4px;
 }
 
 

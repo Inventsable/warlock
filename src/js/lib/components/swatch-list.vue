@@ -1,10 +1,23 @@
 <script setup lang="ts">
 import { useSettings } from '../../stores/settings';
-import { ref, StyleValue, computed } from 'vue';
+import { ref, watch, StyleValue, computed, onMounted, onBeforeUnmount } from 'vue';
 import type { ColorValue, gradientColor } from '../../../shared/shared';
 import type { swatch } from '../../stores/types'
-import { getVerbosePackage } from '../utils/app';
+import { getVerbosePackage, setCSS, debounce } from '../utils/app';
+
 const settings = useSettings();
+watch(() => settings.indicator.show, (value: boolean) => {
+  resetSwatchListHeight();
+})
+
+const resetSwatchListHeight = () => {
+  const temp = document.querySelector('.indicator-wrapper')?.getBoundingClientRect();
+  if (temp) {
+    setCSS(`--max-swatch-list-height`, `calc(100vh - ${temp.height}px - 40px)`)
+  } else {
+    setCSS(`--max-swatch-list-height`, `calc(100vh - 40px)`)
+  }
+}
 
 interface swatchUI extends swatch {
   hover: boolean;
@@ -43,6 +56,28 @@ const checkIfColorActive = (color: ColorValue): boolean => {
 const checkIfColorActiveStroke = (color: ColorValue): boolean => {
   return JSON.stringify(color) == JSON.stringify(settings.strokeColor) && !settings.strokeIsEmpty && !settings.strokeIsMulti
 }
+
+
+const handleWindowResize = debounce(() => {
+  resetSwatchListHeight();
+}, 200);
+
+const windowWidth = ref(window.innerWidth);
+
+watch(() => window.innerWidth, (newWidth, oldWidth) => {
+  if (newWidth !== oldWidth) {
+    windowWidth.value = newWidth;
+    handleWindowResize();
+  }
+});
+
+onMounted(() => {
+  resetSwatchListHeight();
+  window.addEventListener('resize', handleWindowResize);
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleWindowResize);
+});
 </script>
 
 <template>
@@ -66,11 +101,26 @@ const checkIfColorActiveStroke = (color: ColorValue): boolean => {
 </template>
 
 <style>
+:root {
+  --max-swatch-list-height: 700px;
+}
+
 .swatch-list-container {
   padding: 10px 2px;
   background-color: var(--color-header);
   height: fit-content;
   padding: 2px;
+  max-height: var(--max-swatch-list-height);
+  overflow-y: auto;
+}
+
+.swatch-list-item:last-child {
+  margin-bottom: 2px;
+}
+
+.swatch-list-container::-webkit-scrollbar {
+  background-color: var(--color-scrollbar);
+  width: 6px;
 }
 
 .swatch-list-item {
@@ -84,7 +134,7 @@ const checkIfColorActiveStroke = (color: ColorValue): boolean => {
 }
 
 .swatch-list-item:hover .swatch-item-sidebar {
-  width: 20px;
+  width: 40%;
 }
 
 .swatch-item-sidebar {
