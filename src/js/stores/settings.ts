@@ -50,6 +50,7 @@ export const useSettings = defineStore(name, {
       options: {
         locked: false,
         isCMYK: false,
+        activeIndex: 0,
       },
       adapter: {
         online: false,
@@ -96,6 +97,7 @@ export const useSettings = defineStore(name, {
                 red: 255,
                 green: 0,
                 blue: 0,
+                typename: "RGBColor",
               } as ColorValue,
               index: 0,
             } as swatch,
@@ -104,6 +106,7 @@ export const useSettings = defineStore(name, {
                 red: 0,
                 green: 150,
                 blue: 150,
+                typename: "RGBColor",
               } as ColorValue,
               index: 1,
             } as swatch,
@@ -112,6 +115,7 @@ export const useSettings = defineStore(name, {
                 red: 100,
                 green: 0,
                 blue: 100,
+                typename: "RGBColor",
               } as ColorValue,
               index: 2,
             } as swatch,
@@ -170,6 +174,10 @@ export const useSettings = defineStore(name, {
       ],
     } as SettingsStore),
   getters: {
+    // This will need to have some kind of index or determination
+    activeList(state) {
+      return state.lists[state.options.activeIndex];
+    },
     fillIsGradient(state) {
       return (
         state.indicator.fill.colors &&

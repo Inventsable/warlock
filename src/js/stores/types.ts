@@ -7,6 +7,7 @@ export interface SettingsStore {
   options: {
     locked: boolean;
     isCMYK: boolean;
+    activeIndex: number;
   };
   indicator: {
     show: boolean;

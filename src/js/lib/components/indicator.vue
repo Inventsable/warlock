@@ -20,7 +20,7 @@ const showStrokeMulti = computed(() => settings.strokeIsMulti),
 const fillBGColor = computed(() => !settings.fillIsGradient ? getVerbosePackage(settings.fillColor).hex : "#000"),
   strokeBGColor = computed(() => !settings.strokeIsGradient ? getVerbosePackage(settings.strokeColor).hex : "#000");
 
-
+// Doesn't work for SVG
 const getGradientStyle = (color: gradientColor): StyleValue => {
   const isAbove180 = color.angle + 90 > 180;
   const angle = (color.angle - 90)
