@@ -60,8 +60,19 @@ const context = ref([
   },
 ])
 
+const documentScan = async () => {
+  console.log("Scan document")
+  const result = JSON.parse(await evalES(`deepScan('${JSON.stringify(settings.deepScanOptions)}')`));
+  // console.log(result);
+  const colors = result.colors.filter((v: ColorValue, i: number, a: ColorValue[]) => {
+    return a.findIndex((el: ColorValue) => JSON.stringify(el) == JSON.stringify(v)) == i;
+  }).filter((v: ColorValue) => v.typename && !/nocolor/i.test(v.typename))
+  // console.log(colors);
+  settings.setHardList(colors);
+}
+
 /**
- * While this does work for basic operations, it still doesn't handle GrayColor or GradientColor.
+ * Only trigger on a selection change as a shallow and lightweight look at selected objects
  */
 const shallowScan = async () => {
   const result = JSON.parse(await evalES("shallowScan()"))
@@ -92,7 +103,8 @@ const shallowScan = async () => {
       console.log("Something is up with stroke:")
       console.log(result.appStroke);
     }
-    return null;
+    // Check entire document for colors
+    return await documentScan();
   } else if (result.hasSelection) {
     settings.selection.length = result.selectionLength;
     // The needle>haystack logic isn't perfect in JSX via NoColors, which create duplicates.

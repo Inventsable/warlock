@@ -8,6 +8,7 @@ export interface SettingsStore {
     locked: boolean;
     isCMYK: boolean;
     activeIndex: number;
+    includeIndicatorInDeepScan: boolean;
   };
   indicator: {
     show: boolean;
@@ -44,5 +45,5 @@ export interface swatch {
 export interface swatchList {
   name?: string;
   index: number;
-  swatches: swatch[];
+  swatches: swatch[] | ColorValue[];
 }

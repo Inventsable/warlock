@@ -139,44 +139,44 @@ interface DiagnosticReport {
   hasErrors: boolean;
 }
 
-export const checkDiagnostic = (
-  diagnostic: DocumentDiagonostic,
-  settings: Config
-) => {
-  const colorProps = ["anchor", "handle", "outline"];
-  const colors = [
-    settings.anchor.style.color as ColorPackage,
-    settings.handle.style.color as ColorPackage,
-    settings.outline.style.color as ColorPackage,
-  ]
-    .map((i, index) => {
-      let temp = Object.assign({}, i);
-      temp["name"] = colorProps[index];
-      return temp;
-    })
-    .filter((i) => i.model !== diagnostic.colorModel)
-    .map((i): ColorError => {
-      return {
-        name: i.name as string,
-        // @ts-ignore
-        value: i[i.model],
-        msg: `${i.name} value is ${i.model} but document is ${diagnostic.colorModel}`,
-      } as ColorError;
-    });
-  const result = {
-    colorErrors: colors as ColorErrors,
-    hasErrors: true,
-  } as DiagnosticReport;
-  if (!colors.length) {
-    result.hasErrors = false;
-    delete result.colorErrors;
-  }
-  if (diagnostic.paths.anchors > settings.options.chunks.maxAnchors) {
-    result.hasErrors = true;
-    result["chunkWarning"] = {
-      anchorMax: settings.options.chunks.maxAnchors,
-      anchorReal: diagnostic.paths.anchors,
-    };
-  }
-  return result;
-};
+// export const checkDiagnostic = (
+//   diagnostic: DocumentDiagonostic,
+//   settings: Config
+// ) => {
+//   const colorProps = ["anchor", "handle", "outline"];
+//   const colors = [
+//     settings.anchor.style.color as ColorPackage,
+//     settings.handle.style.color as ColorPackage,
+//     settings.outline.style.color as ColorPackage,
+//   ]
+//     .map((i, index) => {
+//       let temp = Object.assign({}, i);
+//       temp["name"] = colorProps[index];
+//       return temp;
+//     })
+//     .filter((i) => i.model !== diagnostic.colorModel)
+//     .map((i): ColorError => {
+//       return {
+//         name: i.name as string,
+//         // @ts-ignore
+//         value: i[i.model],
+//         msg: `${i.name} value is ${i.model} but document is ${diagnostic.colorModel}`,
+//       } as ColorError;
+//     });
+//   const result = {
+//     colorErrors: colors as ColorErrors,
+//     hasErrors: true,
+//   } as DiagnosticReport;
+//   if (!colors.length) {
+//     result.hasErrors = false;
+//     delete result.colorErrors;
+//   }
+//   if (diagnostic.paths.anchors > settings.options.chunks.maxAnchors) {
+//     result.hasErrors = true;
+//     result["chunkWarning"] = {
+//       anchorMax: settings.options.chunks.maxAnchors,
+//       anchorReal: diagnostic.paths.anchors,
+//     };
+//   }
+//   return result;
+// };

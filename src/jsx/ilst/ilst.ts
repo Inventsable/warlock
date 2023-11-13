@@ -9,6 +9,7 @@ import type {
   gradientColor,
   gradientStop,
   gradient,
+  ScriptDeepScanOptions,
 } from "../../shared/shared";
 
 export const checkFillStroke = (): boolean => {
@@ -61,6 +62,32 @@ export const shallowScanItem = (
     fills: fillChain,
     strokes: strokeChain,
   };
+};
+
+export const deepScanItem = (item: any, colorChain: any[]) => {
+  if (item.fillColor || item.strokeColor) {
+    if (item.fillColor) {
+      if (!ArrayIncludes(colorChain, getColor(item.fillColor)))
+        colorChain.push(getColor(item.fillColor));
+    }
+    if (item.strokeColor) {
+      if (!ArrayIncludes(colorChain, getColor(item.strokeColor)))
+        colorChain.push(getColor(item.strokeColor));
+    }
+  }
+  if (item.pathItems && item.pathItems.length) {
+    for (let i = 0; i < item.pathItems.length; i++) {
+      const result = deepScanItem(item.pathItems[i], colorChain);
+      colorChain = result;
+    }
+  }
+  if (item.pageItems && item.pageItems.length) {
+    for (let i = 0; i < item.pageItems.length; i++) {
+      const result = deepScanItem(item.pageItems[i], colorChain);
+      colorChain = result;
+    }
+  }
+  return colorChain;
 };
 
 export const getSanitizedGradient = (color: gradientColor) => {
@@ -122,6 +149,22 @@ export const shallowScan = () => {
     selectionLength: app.selection.length,
     fills: fillChain,
     strokes: strokeChain,
+  } as ScriptScanResult);
+};
+
+export const deepScan = (cfg: string) => {
+  const config = JSON.parse(cfg) as ScriptDeepScanOptions;
+  let colorChain: any[] = [];
+  for (let i = 0; i < app.activeDocument.pageItems.length; i++) {
+    const result = deepScanItem(app.activeDocument.pageItems[i], colorChain);
+    colorChain = result;
+  }
+  if (config.includeIndicator) {
+    colorChain.push(getColor(app.activeDocument.defaultFillColor));
+    colorChain.push(getColor(app.activeDocument.defaultStrokeColor));
+  }
+  return JSON.stringify({
+    colors: colorChain as ColorValue[],
   } as ScriptScanResult);
 };
 

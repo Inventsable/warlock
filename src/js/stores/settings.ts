@@ -51,6 +51,7 @@ export const useSettings = defineStore(name, {
         locked: false,
         isCMYK: false,
         activeIndex: 0,
+        includeIndicatorInDeepScan: true,
       },
       adapter: {
         online: false,
@@ -169,11 +170,25 @@ export const useSettings = defineStore(name, {
               },
               index: 3,
             } as swatch,
+            {
+              color: {
+                red: 70,
+                green: 160,
+                blue: 245,
+                typename: "RGBColor",
+              } as ColorValue,
+              index: 4,
+            } as swatch,
           ],
         } as swatchList,
       ],
     } as SettingsStore),
   getters: {
+    deepScanOptions(state) {
+      return {
+        includeIndicator: state.options.includeIndicatorInDeepScan,
+      };
+    },
     // This will need to have some kind of index or determination
     activeList(state) {
       return state.lists[state.options.activeIndex];
@@ -238,6 +253,16 @@ export const useSettings = defineStore(name, {
     },
   },
   actions: {
+    setHardList(value: ColorValue[] | swatch[]) {
+      const list = this.$state.lists[this.$state.options.activeIndex].swatches;
+      for (let i = list.length - 1; i >= 0; i--) {
+        list.pop();
+      }
+      for (let i = value.length - 1; i >= 0; i--) {
+        // @ts-ignore
+        list.push(value[i] as ColorValue | swatch);
+      }
+    },
     setHardFill(value: ColorValue) {
       this.$state.indicator.fill.colors = [value];
     },

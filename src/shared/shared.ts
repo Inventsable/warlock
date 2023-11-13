@@ -95,10 +95,19 @@ export type ColorValue =
   | gradientColor;
 
 export interface ScriptScanResult {
-  hasSelection: boolean;
-  selectionLength: number;
+  hasSelection?: boolean;
+  selectionLength?: number;
   appFill?: ColorValue;
   appStroke?: ColorValue;
   fills?: ColorValue[];
   strokes?: ColorValue[];
+  colors?: ColorValue[];
+}
+
+export interface ScriptDeepScanOptions {
+  includeIndicator: boolean;
+  fillsOnly?: boolean;
+  strokesOnly?: boolean;
+  ignoreHidden?: boolean;
+  ignoreLocked?: boolean;
 }
