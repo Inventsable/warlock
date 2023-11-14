@@ -16,6 +16,7 @@ export const getVerbosePackage = (
     else if (Object.keys(val).includes("hue")) colorModel = "HSB";
     else if (Object.keys(val).includes("red")) colorModel = "RGB";
     else if (Object.keys(val).includes("gray")) colorModel = "GRAY";
+    else if (Object.keys(val).includes("matrix")) colorModel = "GRADIENT";
     else colorModel = "UNKNOWN";
   }
   const result = {
@@ -60,6 +61,24 @@ export const getVerbosePackage = (
     result.HSB = convertRGBToHSB(result.RGB as rgbColor);
     result.CMYK = convertRGBToCMYK(result.RGB as rgbColor);
     result.hex = convertRGBToHex(result.RGB as rgbColor);
+  } else if (colorModel == "GRADIENT") {
+    result.RGB = {
+      red: 255,
+      green: 255,
+      blue: 255,
+    };
+    result.HSB = {
+      hue: 100,
+      saturation: 100,
+      brightness: 100,
+    };
+    result.CMYK = {
+      cyan: 100,
+      magenta: 100,
+      yellow: 100,
+      black: 100,
+    };
+    result.hex = "#ffffff";
   }
   return result;
 };
@@ -93,6 +112,12 @@ export const convertRGBToHex = (rgb: rgbColor): string => {
 
 export const setCSS = (prop: string, data: string): void => {
   document.documentElement.style.setProperty(prop, data);
+};
+
+export const getCSS = (prop: string): string => {
+  return getComputedStyle(document.documentElement).getPropertyValue(
+    `--${prop.replace(/^--/, "")}`
+  );
 };
 
 export const debounce = <T extends (...args: any[]) => void>(

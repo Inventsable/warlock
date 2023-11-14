@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, watch, onBeforeMount } from "vue";
+import { onMounted, ref, computed, watch, onBeforeMount, nextTick } from "vue";
 import { useSettings } from '../stores/settings';
 import { evalES, csi } from "../lib/utils/utils";
 import type { Ref } from "vue";
@@ -73,7 +73,6 @@ const mergeColorsReducer = (
   return accumulator;
 };
 
-
 const documentScan = async () => {
   // console.log("Scan document")
   const result = JSON.parse(await evalES(`deepScan('${JSON.stringify(settings.deepScanOptions)}')`));
@@ -98,7 +97,7 @@ const syncToAppIndicator = async (): Promise<void> => {
  * Only trigger on a selection change as a shallow and lightweight look at selected objects
  */
 const shallowScan = async () => {
-  const result = JSON.parse(await evalES("shallowScan()"))
+  const result = JSON.parse(await evalES("shallowScan()"));
   // 
   // If no selection is present in app, trust the default values
   if (!result.hasSelection) {
@@ -150,80 +149,97 @@ const shallowScan = async () => {
   // 
 }
 
+
 /** CONTEXT / FLYOUT MENUS */
-const context = ref([
-  {
-    label: "Show indicator",
-    checked: showIndicator.value,
-    checkable: true,
-    enabled: true,
-    id: "showIndicator"
-  },
-  {
-    label: 'Filters',
-    menu: [
-      {
-        label: 'Actives always on top',
-        checkable: true,
-        checked: settings.filters.indicatorsOnTop,
-        callback: () => {
-          settings.filters.indicatorsOnTop = !settings.filters.indicatorsOnTop;
+
+const buildContextMenu = () => {
+  return [
+    {
+      label: "Show indicator",
+      checked: showIndicator.value,
+      checkable: true,
+      enabled: true,
+      id: "showIndicator"
+    },
+    {
+      label: 'Filters',
+      menu: [
+        {
+          label: 'Actives always on top',
+          checkable: true,
+          checked: settings.filters.indicatorsOnTop,
+          callback: () => {
+            settings.filters.indicatorsOnTop = !settings.filters.indicatorsOnTop;
+          }
+        },
+        {
+          label: '---'
+        },
+        {
+          label: 'Sort by hue',
+          checkable: true,
+          checked: settings.filters.byHue,
+          callback: () => {
+            settings.toggleSortByHue(!settings.filters.byHue);
+          }
+        },
+        {
+          label: 'Sort by saturation',
+          checkable: true,
+          checked: settings.filters.bySaturation,
+          callback: () => {
+            settings.toggleSortBySaturation(!settings.filters.bySaturation);
+          }
+        },
+        {
+          label: 'Sort by frequency',
+          checkable: true,
+          checked: settings.filters.byFrequency,
+          callback: () => {
+            settings.toggleSortByFrequency(!settings.filters.byFrequency);
+          }
         }
-      },
-      {
-        label: '---'
-      },
-      {
-        label: 'Sort by hue',
-        checkable: true,
-        checked: settings.hueFilter,
-        callback: () => {
-          settings.toggleSortByHue(!settings.filters.byHue);
-        }
-      },
-      {
-        label: 'Sort by saturation',
-        checkable: true,
-        checked: settings.saturationFilter,
-        callback: () => {
-          settings.toggleSortBySaturation(!settings.filters.bySaturation);
-        }
-      },
-      {
-        label: 'Sort by frequency',
-        checkable: true,
-        checked: () => settings.frequencyFilter,
-        callback: () => {
-          settings.toggleSortByFrequency(!settings.filters.byFrequency);
-        }
+      ]
+    },
+    {
+      label: '---'
+    },
+    {
+      label: "Delete AppData",
+      callback: () => {
+        settings.deleteSettings()
+        console.log("Local settings deleted")
       }
-    ]
-  },
-  {
-    label: '---'
-  },
-  {
-    label: "Delete AppData",
-    callback: () => {
-      settings.deleteSettings()
-      console.log("Local settings deleted")
-    }
-  },
-  {
-    label: "Delete local storage",
-    callback: () => {
-      window.localStorage.removeItem("settings");
-      console.log("Local storage deleted")
-    }
-  },
-])
+    },
+    {
+      label: "Delete local storage",
+      callback: () => {
+        window.localStorage.removeItem("settings");
+        console.log("Local storage deleted")
+      }
+    },
+  ] as ContextMenuItem[]
+}
+
+const contextMenuRef = ref(buildContextMenu());
+
 /**
  * Used to bypass update:modelValue failing to echo with computed getter
  */
 const checkClick = (item: ContextMenuItem | ContextMenuItemProp) => {
   if (item.id && /indicator/i.test(item.id)) {
     showIndicator.value = !item.checked
+  } else {
+    // This is stupid, but I can't get it to react to my Pinia state otherwise
+    contextMenuRef.value = [];
+    // So clear the value completely
+    nextTick(() => {
+      // And on nextTick, repopulate the menu with updated values to force a redraw
+      contextMenuRef.value = buildContextMenu();
+    })
   }
+
+
 }
 
 /** MISC */
@@ -289,7 +305,7 @@ onMounted(async () => {
 </script>
 <template>
   <flyoutMenu refresh />
-  <contextMenu refresh v-model="context" @click="checkClick" />
+  <contextMenu refresh v-model="contextMenuRef" @click="checkClick" />
   <div class="home-content">
     <indicator v-if="showIndicator" />
     <swatchList />

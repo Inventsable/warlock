@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useSettings } from '../../stores/settings';
 import { ref, watch, StyleValue, computed, onMounted, onBeforeUnmount } from 'vue';
-import type { ColorValue, gradientColor } from '../../../shared/shared';
+import type { ColorValue, gradientColor, rgbColor, hsbColor } from '../../../shared/shared';
 import type { swatch } from '../../stores/types'
 import { getVerbosePackage, setCSS, debounce } from '../utils/app';
+import { CopyOptions } from 'fs';
 
 const settings = useSettings();
 watch(() => settings.indicator.show, (value: boolean) => {
@@ -69,6 +70,24 @@ watch(() => window.innerWidth, (newWidth, oldWidth) => {
     handleWindowResize();
   }
 });
+
+const displayHSB = (color: ColorValue) => {
+  const HSB = getVerbosePackage(color).HSB;
+  return `hsb(${HSB.hue}, ${HSB.saturation}, ${HSB.brightness})`
+}
+
+watch(() => settings.filteredActiveList, (newVal, oldVal) => {
+  console.log(settings.currentFilter)
+  console.log("NEW:")
+  newVal.forEach((value: swatch | ColorValue) => {
+    // @ts-ignore
+    if ((value as swatch).color && /rgb/i.test(((value as swatch).color as ColorValue).typename)) {
+      console.log(`rgb(${((value as swatch).color as rgbColor)?.red}, ${((value as swatch).color as rgbColor)?.green}, ${((value as swatch).color as rgbColor)?.blue})\t\t==\t${displayHSB((value as swatch).color)}\t@@ ${((value as swatch)).count}`)
+    } else {
+      console.log("GRADIENT:", value.color)
+    }
+  })
+})
 
 onMounted(() => {
   resetSwatchListHeight();

@@ -190,6 +190,11 @@ export const useSettings = defineStore(name, {
       ],
     } as SettingsStore),
   getters: {
+    currentFilter(state) {
+      if (state.filters.byHue) return "Hue";
+      else if (state.filters.bySaturation) return "Saturation";
+      else if (state.filters.byFrequency) return "Frequency";
+    },
     hueFilter(state) {
       return state.filters.byHue;
     },
@@ -201,23 +206,35 @@ export const useSettings = defineStore(name, {
     },
     filteredActiveList(state) {
       const list = state.lists[state.options.activeIndex].swatches.slice();
+      console.log(list);
       list.sort((a: swatch, b: swatch) => {
+        if (/gradient/i.test(a.color.typename)) {
+          console.log("FOUND GRADIENT A");
+          console.log(a.color);
+          return -1;
+        } else if (/gradient/i.test(b.color.typename)) {
+          console.log("FOUND GRADIENT B");
+          console.log(b.color);
+          return 1;
+        }
         const aS = getVerbosePackage(a),
           bS = getVerbosePackage(b);
         if (state.filters.indicatorsOnTop) {
           if (a.color == this.fillColor || a.color == this.strokeColor)
             return -1;
+          else if (b.color == this.fillColor || b.color == this.strokeColor)
+            return 1;
         }
         if (state.filters.byHue) {
           return aS.HSB.hue - bS.HSB.hue;
         } else if (state.filters.bySaturation) {
           return aS.HSB.saturation - bS.HSB.saturation;
         } else if (state.filters.byFrequency) {
-          return a.count - b.count;
+          return b.count - a.count;
         }
       });
       console.log(list);
-      return state.filters.reversed ? list.reverse() : list;
+      return list;
     },
     deepScanOptions(state) {
       return {
@@ -322,15 +339,21 @@ export const useSettings = defineStore(name, {
       }
     },
     setHardList(value: ColorValue[] | swatch[]) {
-      const list = this.$state.lists[this.$state.options.activeIndex].swatches;
-      for (let i = list.length - 1; i >= 0; i--) {
-        list.pop();
-      }
-      for (let i = value.length - 1; i >= 0; i--) {
-        // @ts-ignore
-        list.push(value[i] as ColorValue | swatch);
-      }
+      this.lists[this.options.activeIndex].swatches = value;
+      console.log("Set explicitly");
+      console.log(this.lists[this.options.activeIndex].swatches);
     },
+
+    // setHardList(value: ColorValue[] | swatch[]) {
+    //   const list = this.$state.lists[this.$state.options.activeIndex].swatches;
+    //   for (let i = list.length - 1; i >= 0; i--) {
+    //     list.pop();
+    //   }
+    //   for (let i = value.length - 1; i >= 0; i--) {
+    //     // @ts-ignore
+    //     list.push(value[i] as ColorValue | swatch);
+    //   }
+    // },
     setHardFill(value: ColorValue) {
       this.$state.indicator.fill.colors = [value];
     },
