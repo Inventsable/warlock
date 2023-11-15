@@ -167,7 +167,8 @@ onBeforeUnmount(() => {
 }
 
 .swatch-list-item:hover .swatch-item-sidebar {
-  width: 40%;
+  width: 60%;
+  left: -30%;
 }
 
 .swatch-item-sidebar {
@@ -175,13 +176,14 @@ onBeforeUnmount(() => {
 }
 
 .swatch-item-sidebar {
+  border-radius: 100%;
   box-sizing: border-box;
   position: absolute;
   top: 1px;
-  left: 0px;
+  left: -60%;
   background-color: var(--color-bg);
   height: 20px;
-  transition: width 200ms var(--quint) 20ms;
+  transition: width 200ms var(--quint) 20ms, left 200ms var(--quint) 20ms;
 }
 
 .swatch-item-main {
