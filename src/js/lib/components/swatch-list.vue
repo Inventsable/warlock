@@ -123,10 +123,11 @@ onBeforeUnmount(() => {
       <div class="swatch-item-main" v-else-if="item.color.typename && /gradient/i.test(item.color.typename)"
         :style="getGradientStyle(item.color as gradientColor)" />
       <div class="swatch-item-indicator" :class="checkIfColorActive(item.color) ? 'active' : 'idle'" :style="{
-        backgroundColor: getVerbosePackage(item.color as ColorValue).hex
+        // backgroundColor: getVerbosePackage(item.color as ColorValue).hex
       }">
         <div :style="{
-          backgroundColor: checkIfColorActiveStroke(item.color) ? 'var(--color-header)' : getVerbosePackage(item.color as ColorValue).hex
+          backgroundColor: getVerbosePackage(item.color as ColorValue).hex
+          // backgroundColor: checkIfColorActiveStroke(item.color) ? 'var(--color-header)' : getVerbosePackage(item.color as ColorValue).hex
         }" class="swatch-item-indicator-center" />
       </div>
     </div>
@@ -145,7 +146,9 @@ onBeforeUnmount(() => {
   padding: 2px;
   max-height: var(--max-swatch-list-height);
   overflow-y: auto;
+  overflow-x: hidden;
 }
+
 
 .swatch-list-item:last-child {
   margin-bottom: 2px;
@@ -157,13 +160,13 @@ onBeforeUnmount(() => {
 }
 
 .swatch-list-item {
+  position: relative;
   box-sizing: border-box;
   height: 22px;
   display: flex;
   flex-wrap: nowrap;
   justify-content: flex-start;
   align-items: center;
-  position: relative;
 }
 
 .swatch-list-item:hover .swatch-item-sidebar {
@@ -193,27 +196,32 @@ onBeforeUnmount(() => {
 }
 
 .swatch-item-indicator {
-  transition: width 200ms var(--quint) 0ms, margin-left 200ms var(--quint) 0ms;
-  background-color: var(--color-selection);
-  height: 8px;
+  position: absolute;
+  transition: width 200ms var(--quint) 0ms, right 200ms var(--quint) 0ms;
+  background-color: var(--color-header);
+  border-radius: 28px;
+  height: 14px;
   display: flex;
+  top: 4px;
+  right: -7px;
   justify-content: center;
   align-items: center;
 }
 
 .swatch-item-indicator.idle {
-  margin-left: 0px;
+  right: -45%;
   width: 0px;
 }
 
 .swatch-item-indicator.active {
-  margin-left: 6px;
-  width: 10px;
+  right: -7px;
+  width: 14px;
 }
 
 .swatch-item-indicator.active .swatch-item-indicator-center {
-  height: 55%;
-  width: 55%;
+  height: 6px;
+  width: 6px;
+  border-radius: 20px;
 }
 
 .swatch-item-indicator.idle .swatch-item-indicator-center {
@@ -222,8 +230,9 @@ onBeforeUnmount(() => {
 }
 
 .swatch-item-indicator-center {
-  background-color: var(--color-header);
+  border-radius: 20px;
   transition: width 200ms var(--quint) 0ms, height 200ms var(--quint) 0ms;
-  border: 2px solid hsl(220, 60%, 10%);
+  /* background-color: var(--color-header); */
+  /* border: 2px solid hsl(220, 60%, 10%); */
 }
 </style>
