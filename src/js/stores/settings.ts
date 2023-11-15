@@ -16,7 +16,7 @@ import type {
   hsbColor,
   ColorValue,
 } from "../../shared/shared";
-import type { swatch, swatchList, SettingsStore } from "./types";
+import type { swab, swabList, SettingsStore } from "./types";
 
 const name = "settings";
 const storage = window.localStorage;
@@ -98,7 +98,7 @@ export const useSettings = defineStore(name, {
         {
           name: "foo",
           index: 0,
-          swatches: [
+          swabs: [
             // {
             //   color: {
             //     red: 255,
@@ -107,7 +107,7 @@ export const useSettings = defineStore(name, {
             //     typename: "RGBColor",
             //   } as ColorValue,
             //   index: 0,
-            // } as swatch,
+            // } as swab,
             // {
             //   color: {
             //     red: 0,
@@ -116,7 +116,7 @@ export const useSettings = defineStore(name, {
             //     typename: "RGBColor",
             //   } as ColorValue,
             //   index: 1,
-            // } as swatch,
+            // } as swab,
             // {
             //   color: {
             //     red: 100,
@@ -125,7 +125,7 @@ export const useSettings = defineStore(name, {
             //     typename: "RGBColor",
             //   } as ColorValue,
             //   index: 2,
-            // } as swatch,
+            // } as swab,
             // {
             //   color: {
             //     angle: 0,
@@ -175,7 +175,7 @@ export const useSettings = defineStore(name, {
             //     },
             //   },
             //   index: 3,
-            // } as swatch,
+            // } as swab,
             // {
             //   color: {
             //     red: 70,
@@ -184,9 +184,9 @@ export const useSettings = defineStore(name, {
             //     typename: "RGBColor",
             //   } as ColorValue,
             //   index: 4,
-            // } as swatch,
+            // } as swab,
           ],
-        } as swatchList,
+        } as swabList,
       ],
     } as SettingsStore),
   getters: {
@@ -205,36 +205,40 @@ export const useSettings = defineStore(name, {
       return state.filters.byFrequency;
     },
     filteredActiveList(state) {
-      const list = state.lists[state.options.activeIndex].swatches.slice();
+      const list = state.lists[state.options.activeIndex].swabs.slice();
       console.log(list);
-      list.sort((a: swatch, b: swatch) => {
-        if (/gradient/i.test(a.color.typename)) {
-          console.log("FOUND GRADIENT A");
-          console.log(a.color);
-          return -1;
-        } else if (/gradient/i.test(b.color.typename)) {
-          console.log("FOUND GRADIENT B");
-          console.log(b.color);
-          return 1;
-        }
-        const aS = getVerbosePackage(a),
-          bS = getVerbosePackage(b);
-        if (state.filters.indicatorsOnTop) {
-          if (a.color == this.fillColor || a.color == this.strokeColor)
-            return -1;
-          else if (b.color == this.fillColor || b.color == this.strokeColor)
-            return 1;
-        }
-        if (state.filters.byHue) {
-          return aS.HSB.hue - bS.HSB.hue;
-        } else if (state.filters.bySaturation) {
-          return aS.HSB.saturation - bS.HSB.saturation;
-        } else if (state.filters.byFrequency) {
-          return b.count - a.count;
-        }
-      });
-      console.log(list);
-      return list;
+
+      // // Wtf typescript
+      // list.sort((a: swab, b: swab) => {
+      //   if (/gradient/i.test(a.color.typename)) {
+      //     console.log("FOUND GRADIENT A");
+      //     console.log(a.color);
+      //     return -1;
+      //   } else if (/gradient/i.test(b.color.typename)) {
+      //     console.log("FOUND GRADIENT B");
+      //     console.log(b.color);
+      //     return 1;
+      //   }
+      //   const aS = getVerbosePackage(a),
+      //     bS = getVerbosePackage(b);
+      //   if (state.filters.indicatorsOnTop) {
+      //     if (a.color == this.fillColor || a.color == this.strokeColor)
+      //       return -1;
+      //     else if (b.color == this.fillColor || b.color == this.strokeColor)
+      //       return 1;
+      //   }
+      //   if (state.filters.byHue) {
+      //     return aS.HSB.hue - bS.HSB.hue;
+      //   } else if (state.filters.bySaturation) {
+      //     return aS.HSB.saturation - bS.HSB.saturation;
+      //   } else if (state.filters.byFrequency) {
+      //     return b.count - a.count;
+      //   }
+      // });
+      // console.log(list);
+      // return list;
+
+      return [];
     },
     deepScanOptions(state) {
       return {
@@ -305,6 +309,16 @@ export const useSettings = defineStore(name, {
     },
   },
   actions: {
+    triggerFilter(reset: boolean = false) {
+      if (reset) {
+        this.filters.byFrequency = false;
+        this.filters.byHue = false;
+        this.filters.bySaturation = false;
+        this.lists[this.options.activeIndex].swabs.sort((a: swab, b: swab) => {
+          return b.index - a.index;
+        });
+      }
+    },
     toggleSortByFrequency(value: boolean) {
       if (value) {
         this.$state.filters.byHue = false;
@@ -338,20 +352,20 @@ export const useSettings = defineStore(name, {
         this.$state.filters.byFrequency = false;
       }
     },
-    setHardList(value: ColorValue[] | swatch[]) {
-      this.lists[this.options.activeIndex].swatches = value;
+    setHardList(value: swab[]) {
+      this.lists[this.options.activeIndex].swabs = value;
       console.log("Set explicitly");
-      console.log(this.lists[this.options.activeIndex].swatches);
+      console.log(this.lists[this.options.activeIndex].swabs);
     },
 
-    // setHardList(value: ColorValue[] | swatch[]) {
-    //   const list = this.$state.lists[this.$state.options.activeIndex].swatches;
+    // setHardList(value: ColorValue[] | swab[]) {
+    //   const list = this.$state.lists[this.$state.options.activeIndex].swabList;
     //   for (let i = list.length - 1; i >= 0; i--) {
     //     list.pop();
     //   }
     //   for (let i = value.length - 1; i >= 0; i--) {
     //     // @ts-ignore
-    //     list.push(value[i] as ColorValue | swatch);
+    //     list.push(value[i] as ColorValue | swab);
     //   }
     // },
     setHardFill(value: ColorValue) {

@@ -30,7 +30,7 @@ export interface SettingsStore {
       colors: ColorValue[];
     };
   };
-  lists: swatchList[];
+  lists: swabList[];
   adapter: {
     online: boolean;
     disabled: boolean;
@@ -42,16 +42,16 @@ export interface SettingsStore {
   };
 }
 
-export interface swatch {
+export interface swab {
   name?: string;
   color: ColorValue;
   index: number;
-  count?: number;
+  count: number;
   types: string[];
 }
 
-export interface swatchList {
+export interface swabList {
   name?: string;
   index: number;
-  swatches: swatch[] | ColorValue[];
+  swabs: swab[];
 }

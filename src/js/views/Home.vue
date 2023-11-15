@@ -48,6 +48,7 @@ type ResultItem = {
   color: ColorData;
   types: string[];
   count: number;
+  index: number;
 };
 
 const mergeColorsReducer = (
@@ -68,6 +69,7 @@ const mergeColorsReducer = (
       color: currentItem.data,
       types: [currentItem.type],
       count: 1,
+      index: accumulator.length
     });
   }
   return accumulator;
