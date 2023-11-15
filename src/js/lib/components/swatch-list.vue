@@ -2,7 +2,7 @@
 import { useSettings } from '../../stores/settings';
 import { ref, watch, StyleValue, computed, onMounted, onBeforeUnmount } from 'vue';
 import type { ColorValue, gradientColor, rgbColor, hsbColor } from '../../../shared/shared';
-import type { swatch } from '../../stores/types'
+import type { swab } from '../../stores/types'
 import { getVerbosePackage, setCSS, debounce } from '../utils/app';
 import { CopyOptions } from 'fs';
 
@@ -20,17 +20,21 @@ const resetSwatchListHeight = () => {
   }
 }
 
-interface swatchUI extends swatch {
+interface swabUI extends swab {
   hover: boolean;
   active: boolean;
   color: ColorValue
 }
 
-const UIList = computed(() => settings.filteredActiveList.map((v: ColorValue | swatch): swatchUI => {
+watch(() => settings.currentFilter, (val) => {
+  settings.triggerFilter();
+})
+
+const UIList = computed(() => settings.activeList.swabs.map((v: ColorValue | swab): swabUI => {
   const temp = {
-    color: (v as swatch).color || (v as ColorValue),
+    color: (v as swab).color || (v as ColorValue),
     hover: false // Completely redundant
-  } as swatchUI
+  } as swabUI
   return temp;
 }))
 
@@ -79,15 +83,25 @@ const displayHSB = (color: ColorValue) => {
 watch(() => settings.filteredActiveList, (newVal, oldVal) => {
   console.log(settings.currentFilter)
   console.log("NEW:")
-  newVal.forEach((value: swatch | ColorValue) => {
+  newVal.forEach((value: swab | ColorValue) => {
     // @ts-ignore
-    if ((value as swatch).color && /rgb/i.test(((value as swatch).color as ColorValue).typename)) {
-      console.log(`rgb(${((value as swatch).color as rgbColor)?.red}, ${((value as swatch).color as rgbColor)?.green}, ${((value as swatch).color as rgbColor)?.blue})\t\t==\t${displayHSB((value as swatch).color)}\t@@ ${((value as swatch)).count}`)
+    if ((value as swab).color && /rgb/i.test(((value as swab).color as ColorValue).typename)) {
+      console.log(`rgb(${((value as swab).color as rgbColor)?.red}, ${((value as swab).color as rgbColor)?.green}, ${((value as swab).color as rgbColor)?.blue})\t\t==\t${displayHSB((value as swab).color)}\t@@ ${((value as swab)).count}`)
     } else {
-      console.log("GRADIENT:", value.color)
+      console.log("GRADIENT:", (value as swab).color)
     }
   })
 })
+
+const constructTooltip = (item: swabUI) => {
+  let str = ``;
+  let pckg = getVerbosePackage(item.color)
+  if (settings.options.displayColorModeInTooltip) str += `${item.color.typename}\n`
+  str += `${pckg.hex}\n`
+  str += `HSB(${pckg.HSB.hue}, ${pckg.HSB.saturation}, ${pckg.HSB.brightness})\n`
+  if (settings.options.displayCountInTooltip) str += `Count: ${item.count}`
+  return str.trim();
+}
 
 onMounted(() => {
   resetSwatchListHeight();
@@ -100,7 +114,8 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="swatch-list-container">
-    <div class="swatch-list-item" v-for="(item, index) in UIList" :key="index">
+    <div class="swatch-list-item" v-for="(item, index) in UIList" :key="index"
+      :title="settings.options.displayTooltipOnSwatch ? constructTooltip(item) : ''">
       <div class="swatch-item-sidebar" :class="item.hover ? 'active' : 'idle'"></div>
       <div class="swatch-item-main" v-if="item.color.typename && /rgb|cmyk|gray|hsb/i.test(item.color.typename)" :style="{
         backgroundColor: getVerbosePackage(item.color as ColorValue).hex
@@ -206,6 +221,7 @@ onBeforeUnmount(() => {
 
 .swatch-item-indicator-center {
   background-color: var(--color-header);
-  transition: width 200ms var(--quint) 0ms, height 200ms var(--quint) 0ms
+  transition: width 200ms var(--quint) 0ms, height 200ms var(--quint) 0ms;
+  border: 2px solid hsl(220, 60%, 10%);
 }
 </style>

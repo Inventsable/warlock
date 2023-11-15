@@ -59,7 +59,7 @@ export const useSettings = defineStore(name, {
         isCMYK: false,
         activeIndex: 0,
         includeIndicatorInDeepScan: true,
-        displayTooltipOnSwatch: false,
+        displayTooltipOnSwatch: true,
         displayColorModeInTooltip: false,
         displayCountInTooltip: false,
       },
@@ -309,13 +309,51 @@ export const useSettings = defineStore(name, {
     },
   },
   actions: {
+    // Instead of using a computed getter and cloning, it might be better to sort in place
+    // and trigger this action every time the list is set
     triggerFilter(reset: boolean = false) {
+      console.log("Sort explicitly");
       if (reset) {
         this.filters.byFrequency = false;
         this.filters.byHue = false;
         this.filters.bySaturation = false;
         this.lists[this.options.activeIndex].swabs.sort((a: swab, b: swab) => {
           return b.index - a.index;
+        });
+      } else {
+        this.lists[this.options.activeIndex].swabs.sort((a: swab, b: swab) => {
+          const aSwab = getVerbosePackage(a.color),
+            bSwab = getVerbosePackage(b.color);
+          const aIsGradient = /gradient/i.test(a.color.typename),
+            bIsGradient = /gradient/i.test(b.color.typename);
+          if (aIsGradient) return -1;
+          if (bIsGradient) return 1;
+
+          if (this.filters.byHue) {
+            console.log(
+              aSwab.HSB.hue,
+              " > ",
+              bSwab.HSB.hue,
+              aSwab.HSB.hue - bSwab.HSB.hue
+            );
+            return aSwab.HSB.hue - bSwab.HSB.hue;
+          } else if (this.filters.bySaturation) {
+            console.log(
+              aSwab.HSB.saturation,
+              " > ",
+              bSwab.HSB.saturation,
+              aSwab.HSB.saturation - bSwab.HSB.saturation
+            );
+            return aSwab.HSB.hue - bSwab.HSB.hue;
+          } else if (this.filters.byFrequency) {
+            console.log(a.count, " > ", b.count, a.count > b.count);
+            return a.count - b.count;
+          } else {
+            // Otherwise sort as normal
+            return b.index - a.index;
+          }
+          // Should never be invoked
+          return 0;
         });
       }
     },
@@ -356,6 +394,7 @@ export const useSettings = defineStore(name, {
       this.lists[this.options.activeIndex].swabs = value;
       console.log("Set explicitly");
       console.log(this.lists[this.options.activeIndex].swabs);
+      this.triggerFilter();
     },
 
     // setHardList(value: ColorValue[] | swab[]) {

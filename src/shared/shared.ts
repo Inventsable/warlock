@@ -7,33 +7,33 @@ export interface cmykColor {
   yellow: number;
   black: number;
   count?: number;
-  typename?: string;
+  typename: string;
 }
 export interface rgbColor {
   red: number;
   green: number;
   blue: number;
   count?: number;
-  typename?: string;
+  typename: string;
 }
 export interface hsbColor {
   hue: number;
   saturation: number;
   brightness: number;
   count?: number;
-  typename?: string;
+  typename: string;
 }
 export interface noColor {
   count?: number;
-  typename?: string;
+  typename: string;
 }
 export interface grayColor {
   gray: number;
   count?: number;
-  typename?: string;
+  typename: string;
 }
 export interface multiColor {
-  typename?: string;
+  typename: string;
 }
 
 export interface gradientStop {
@@ -41,7 +41,7 @@ export interface gradientStop {
   midPoint: number;
   opacity: number;
   rampPoint: number;
-  typename?: string;
+  typename: string;
 }
 
 export interface gradientType {
