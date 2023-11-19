@@ -66,17 +66,20 @@ export const getVerbosePackage = (
       red: 255,
       green: 255,
       blue: 255,
+      typename: "RGBColor",
     };
     result.HSB = {
       hue: 100,
       saturation: 100,
       brightness: 100,
+      typename: "HSBColor",
     };
     result.CMYK = {
       cyan: 100,
       magenta: 100,
       yellow: 100,
       black: 100,
+      typename: "CMYKColor",
     };
     result.hex = "#ffffff";
   }
