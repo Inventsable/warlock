@@ -32,7 +32,6 @@ const showIndicator = computed({
   }
 })
 
-
 /** DOCUMENT SCANNING */
 type ColorData = {
   [key: string]: number | string;

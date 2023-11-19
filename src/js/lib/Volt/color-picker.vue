@@ -88,7 +88,10 @@ const contextualTooltip = computed<string>(() => {
 
 async function openColorPicker() {
   const result = JSON.parse(await evalES(`getColorFromPicker('${JSON.stringify(value.value)}')`)) as ColorValue
-  delete result.typename;
+
+  if (result.typename) {
+    delete result.typename;
+  }
   const isSame = JSON.stringify(result) == JSON.stringify(value.value);
   if (isSame)
     return null;
