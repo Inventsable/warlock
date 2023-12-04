@@ -20,6 +20,8 @@ import { AIEvent, AIEventAdapter } from '../main/BoltHostAdapter.js'
 import { SystemPath } from "../lib/cep/csinterface";
 import { appThemeChanged } from "../lib/utils/theme-manager";
 
+const worker = new Worker(new URL('../worker/worker.js', import.meta.url))
+
 const adapter = AIEventAdapter.getInstance();
 const settings = useSettings()
 
@@ -130,24 +132,38 @@ const shallowScan = async () => {
     return await documentScan();
   } else if (result.hasSelection) {
     settings.selection.length = result.selectionLength;
-    // The needle>haystack logic isn't perfect in JSX via NoColors, which create duplicates.
-    // Filter out duplicate entries here via filter instead of Set, to retain Array form:
-    const fills = result.fills.filter((v: ColorValue, i: number, a: ColorValue[]) => {
-      return a.findIndex((el: ColorValue) => JSON.stringify(el) == JSON.stringify(v)) == i;
-    })
-    const strokes = result.strokes.filter((v: ColorValue, i: number, a: ColorValue[]) => {
-      return a.findIndex((el: ColorValue) => JSON.stringify(el) == JSON.stringify(v)) == i;
-    })
-    // Then just set our values directly:
-    settings.indicator.fill.colors = fills;
-    settings.indicator.stroke.colors = strokes;
 
-    console.log(settings.indicator.fill.colors);
+    if (window.Worker) {
+      worker.postMessage(JSON.stringify(result));
+
+      // The worker's own postMessage() function will trigger our onmessage handler here:
+      worker.onmessage = (response:any) => {
+        // console.log(response);
+        const parsedResult = JSON.parse(response as string)
+        // Then just set our values directly:
+        settings.indicator.fill.colors = parsedResult.fills;
+        settings.indicator.stroke.colors = parsedResult.strokes;
+        console.log("WEB WORKER RESULT:")
+        console.log(parsedResult)
+      };
+    } else {
+      // In theory this should never be triggered unless some false-positive triggers on webworker availability
+      console.error("No webworker is available in this environment")
+    }
   } else {
     // In theory this should never be triggered unless the script returns without a hasSelection property
     console.log("Something went wrong, script returned faulty data")
   }
-  // 
+}
+
+function forcePopup() {
+  function openPopup() {
+    csi.requestOpenExtension("com.warlock.cep.settings", "")
+  }
+  openPopup()
+  setTimeout(() => {
+    openPopup();
+  }, 1000);
 }
 
 
@@ -161,6 +177,15 @@ const buildContextMenu = () => {
       checkable: true,
       enabled: true,
       id: "showIndicator"
+    },
+    {
+      label: "Show help",
+      enabled: true,
+      id: "showHelp",
+      callback: () => {
+        console.log("Popup?")
+        forcePopup()
+      }
     },
     {
       label: 'Filters',

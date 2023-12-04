@@ -5,11 +5,39 @@ import discordIcon from '../lib/components/discord-icon.vue';
 
 <template>
   <div class="settings-wrapper">
+    <div class="alert-banner">
+      <div class="alert-content">
+        HELLO WORLD
+      </div>
+    </div>
+    <div class="placeholder-lottie"></div>
     <discordIcon></discordIcon>
   </div>
 </template>
 
 <style>
+.alert-banner {
+  padding: 20px 10px;
+  width: 100%;
+  height: 24px;
+  border: 2px solid #ffba00;
+  margin-bottom: 6px;
+  background-color: rgba(255, 187, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.alert-content {
+  border: 2px solid red;
+}
+
+.placeholder-lottie {
+  border: 2px solid red;
+  width: 100%;
+  height: 300px;
+}
+
 .settings-page-content {
   padding: 0px 16px;
   position: absolute;

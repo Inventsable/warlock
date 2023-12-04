@@ -312,6 +312,8 @@ export const useSettings = defineStore(name, {
     // Instead of using a computed getter and cloning, it might be better to sort in place
     // and trigger this action every time the list is set
     triggerFilter(reset: boolean = false) {
+
+      const DEBUG = false;
       console.log("Sort explicitly");
       if (reset) {
         this.filters.byFrequency = false;
@@ -330,7 +332,7 @@ export const useSettings = defineStore(name, {
           if (bIsGradient) return 1;
 
           if (this.filters.byHue) {
-            console.log(
+            if (DEBUG) console.log(
               aSwab.HSB.hue,
               " > ",
               bSwab.HSB.hue,
@@ -338,15 +340,16 @@ export const useSettings = defineStore(name, {
             );
             return aSwab.HSB.hue - bSwab.HSB.hue;
           } else if (this.filters.bySaturation) {
-            console.log(
-              aSwab.HSB.saturation,
-              " > ",
-              bSwab.HSB.saturation,
-              aSwab.HSB.saturation - bSwab.HSB.saturation
-            );
+            if (DEBUG)
+              console.log(
+                aSwab.HSB.saturation,
+                " > ",
+                bSwab.HSB.saturation,
+                aSwab.HSB.saturation - bSwab.HSB.saturation
+              );
             return aSwab.HSB.hue - bSwab.HSB.hue;
           } else if (this.filters.byFrequency) {
-            console.log(a.count, " > ", b.count, a.count > b.count);
+            if (DEBUG) console.log(a.count, " > ", b.count, a.count > b.count);
             return a.count - b.count;
           } else {
             // Otherwise sort as normal
