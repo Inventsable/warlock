@@ -5,6 +5,7 @@ import type { ColorValue, gradientColor, rgbColor, hsbColor } from '../../../sha
 import type { swab } from '../../stores/types'
 import { getVerbosePackage, setCSS, debounce } from '../utils/app';
 import { CopyOptions } from 'fs';
+import { evalES } from '../utils/bolt';
 
 const settings = useSettings();
 watch(() => settings.indicator.show, (value: boolean) => {
@@ -103,6 +104,19 @@ const constructTooltip = (item: swabUI) => {
   return str.trim();
 }
 
+const activateSwatch = async (item:any, index:number) => {
+  console.log(item)
+  console.log(index)
+  const temp = getVerbosePackage(item.color);
+  let payload = {
+    model: (settings.options.isCMYK) ? "CMYK" : "RGB",
+    data: (settings.options.isCMYK) ? temp.CMYK : temp.RGB,
+    isFill: !!settings.indicator.stroke.active
+  }
+  await evalES(`setActiveColor('${JSON.stringify(payload)}')`);
+  settings.refreshActivesWithNew(item);
+}
+
 onMounted(() => {
   resetSwatchListHeight();
   window.addEventListener('resize', handleWindowResize);
@@ -115,7 +129,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="swatch-list-container">
     <div class="swatch-list-item" v-for="(item, index) in UIList" :key="index"
-      :title="settings.options.displayTooltipOnSwatch ? constructTooltip(item) : ''">
+      @click="activateSwatch(item, index)" :title="settings.options.displayTooltipOnSwatch ? constructTooltip(item) : ''">
       <div class="swatch-item-sidebar" :class="item.hover ? 'active' : 'idle'"></div>
       <div class="swatch-item-main" v-if="item.color.typename && /rgb|cmyk|gray|hsb/i.test(item.color.typename)" :style="{
         backgroundColor: getVerbosePackage(item.color as ColorValue).hex
@@ -125,10 +139,10 @@ onBeforeUnmount(() => {
       <div class="swatch-item-indicator" :class="checkIfColorActive(item.color) ? 'active' : 'idle'" :style="{
         // backgroundColor: getVerbosePackage(item.color as ColorValue).hex
       }">
-        <div :style="{
+        <!-- <div :style="{
           backgroundColor: getVerbosePackage(item.color as ColorValue).hex
           // backgroundColor: checkIfColorActiveStroke(item.color) ? 'var(--color-header)' : getVerbosePackage(item.color as ColorValue).hex
-        }" class="swatch-item-indicator-center" />
+        }" class="swatch-item-indicator-center" /> -->
       </div>
     </div>
   </div>
@@ -167,11 +181,11 @@ onBeforeUnmount(() => {
   flex-wrap: nowrap;
   justify-content: flex-start;
   align-items: center;
+  cursor: pointer;
 }
 
 .swatch-list-item:hover .swatch-item-sidebar {
-  width: 60%;
-  left: -30%;
+  width: 30%;
 }
 
 .swatch-item-sidebar {
@@ -179,11 +193,11 @@ onBeforeUnmount(() => {
 }
 
 .swatch-item-sidebar {
-  border-radius: 100%;
+  /* border-radius: 100%; */
   box-sizing: border-box;
   position: absolute;
   top: 1px;
-  left: -60%;
+  /* left: -60%; */
   background-color: var(--color-bg);
   height: 20px;
   transition: width 200ms var(--quint) 20ms, left 200ms var(--quint) 20ms;
@@ -191,37 +205,34 @@ onBeforeUnmount(() => {
 
 .swatch-item-main {
   box-sizing: border-box;
-  width: 100%;
+  width: 80%;
   height: 20px;
 }
 
 .swatch-item-indicator {
   position: absolute;
-  transition: width 200ms var(--quint) 0ms, right 200ms var(--quint) 0ms;
-  background-color: var(--color-header);
-  border-radius: 28px;
-  height: 14px;
+  transition: width 100ms var(--quint) 0ms, right 100ms var(--quint) 0ms;
+  background-color: var(--color-selection);
+  height: 6px;
+  max-width: 6px;
   display: flex;
-  top: 4px;
-  right: -7px;
   justify-content: center;
   align-items: center;
 }
 
 .swatch-item-indicator.idle {
-  right: -45%;
+  right: 6px;
   width: 0px;
 }
 
 .swatch-item-indicator.active {
-  right: -7px;
-  width: 14px;
+  right: 0px;
+  width: 6px;
 }
 
 .swatch-item-indicator.active .swatch-item-indicator-center {
   height: 6px;
   width: 6px;
-  border-radius: 20px;
 }
 
 .swatch-item-indicator.idle .swatch-item-indicator-center {
@@ -230,9 +241,6 @@ onBeforeUnmount(() => {
 }
 
 .swatch-item-indicator-center {
-  border-radius: 20px;
   transition: width 200ms var(--quint) 0ms, height 200ms var(--quint) 0ms;
-  /* background-color: var(--color-header); */
-  /* border: 2px solid hsl(220, 60%, 10%); */
 }
 </style>

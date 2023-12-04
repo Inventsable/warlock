@@ -4,7 +4,10 @@
  * web worker otherwise risk lagging the user down per scan
  */
 onmessage = e => {
-  const result = JSON.parse(e);
+  if (!isJSON(e.data)) {
+    postMessage({error: "Something went wrong with JSON parsing..."});  
+  }
+  const result = JSON.parse(e.data);
   const fills = result.fills.filter((v, i, a) => {
     return a.findIndex((el) => JSON.stringify(el) == JSON.stringify(v)) == i;
   })
@@ -18,3 +21,11 @@ onmessage = e => {
   }));
 };
 
+const isJSON = (str) => {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch(err) {
+    return false;
+  }
+}

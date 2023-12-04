@@ -20,7 +20,8 @@ import { AIEvent, AIEventAdapter } from '../main/BoltHostAdapter.js'
 import { SystemPath } from "../lib/cep/csinterface";
 import { appThemeChanged } from "../lib/utils/theme-manager";
 
-const worker = new Worker(new URL('../worker/worker.js', import.meta.url))
+const selectionWorker = new Worker(new URL('../worker/colorSelectionFilter.js', import.meta.url))
+const docWorker = new Worker(new URL('../worker/documentScanMerger.js', import.meta.url))
 
 const adapter = AIEventAdapter.getInstance();
 const settings = useSettings()
@@ -52,38 +53,33 @@ type ResultItem = {
   index: number;
 };
 
-const mergeColorsReducer = (
-  accumulator: ResultItem[],
-  currentItem: InputItem
-): ResultItem[] => {
-  if (currentItem.data.typename === 'NoColor') {
-    return accumulator;
-  }
-  const existingItem = accumulator.find(
-    (item) => JSON.stringify(item.color) === JSON.stringify(currentItem.data)
-  );
-  if (existingItem) {
-    if (!existingItem.types.includes(currentItem.type)) existingItem.types.push(currentItem.type);
-    existingItem.count += 1;
-  } else {
-    accumulator.push({
-      color: currentItem.data,
-      types: [currentItem.type],
-      count: 1,
-      index: accumulator.length
-    });
-  }
-  return accumulator;
-};
-
 const documentScan = async () => {
   // console.log("Scan document")
   const result = JSON.parse(await evalES(`deepScan('${JSON.stringify(settings.deepScanOptions)}')`));
-  // console.log(result.colors);
-  const finalList: ResultItem[] = result.colors.reduce(mergeColorsReducer, []);
-  // console.log(finalList);
-  settings.setHardList(finalList);
 
+  if (window.Worker) {
+    const timeStart = Date.now();
+    // Pass fills and strokes from JSX into a ./worker/worker.js:
+    const payload = JSON.stringify(result);
+    docWorker.postMessage(payload);
+
+    docWorker.onmessage = (response: any) => {
+      const parsedResult = JSON.parse(response.data as string)
+      if (parsedResult.error) {
+        // Something went wrong
+        console.error(parsedResult.error)
+      } else {
+        const timeTotal = `${(parsedResult.timeEnd - timeStart)}ms`;
+        console.log(`DEEP SCAN @${timeTotal}:`, parsedResult.list)
+        settings.setHardList(parsedResult.list);
+      }
+    };
+  } else {
+    // In theory this should never be triggered unless some false-positive triggers on webworker availability
+    console.error("No webworker is available in this environment")
+  }
+  // const finalList: ResultItem[] = result.colors.reduce(mergeColorsReducer, []);
+  // console.log(finalList);
   // const colors = result.colors.filter((v: ColorValue, i: number, a: ColorValue[]) => {
   //   return a.findIndex((el: ColorValue) => JSON.stringify(el) == JSON.stringify(v)) == i;
   // }).filter((v: ColorValue) => v.typename && !/nocolor/i.test(v.typename))
@@ -104,23 +100,26 @@ const shallowScan = async () => {
   // 
   // If no selection is present in app, trust the default values
   if (!result.hasSelection) {
+    // If an RGB, CMYK, or NoColor type on fill then assign
     if (/rgb|cmyk|nocolor/i.test(result.appFill.typename)) {
       // Rewrite all fills to a single entry array with current value:
       settings.setHardFill(result.appFill);
     } else if (/gradient/i.test(result.appFill.typename)) {
+      // Otherwise if a gradient, just complain for now
       console.log("Warlock can't support gradient colors yet:")
       console.log(result.appFill)
       settings.setHardFill(result.appFill);
-
     } else {
       // Otherwise something went haywire and isn't accounted for:
       console.log("Something is up with fill:")
       console.log(result.appFill);
     }
+    // If an RGB, CMYK, or NoColor type on stroke then assign
     if (/rgb|cmyk|nocolor/i.test(result.appStroke.typename)) {
       // Rewrite all stroke to a single entry array with current value:
       settings.setHardStroke(result.appStroke)
     } else if (/gradient/i.test(result.appStroke.typename)) {
+      // Otherwise if a gradient, just complain for now
       console.log("Warlock can't support gradient colors yet:")
       console.log(result.appStroke)
     } else {
@@ -134,17 +133,24 @@ const shallowScan = async () => {
     settings.selection.length = result.selectionLength;
 
     if (window.Worker) {
-      worker.postMessage(JSON.stringify(result));
+      const timeStart = Date.now();
+      // Pass fills and strokes from JSX into a ./worker/worker.js:
+      const payload = JSON.stringify(result);
+      selectionWorker.postMessage(payload);
 
       // The worker's own postMessage() function will trigger our onmessage handler here:
-      worker.onmessage = (response:any) => {
-        // console.log(response);
-        const parsedResult = JSON.parse(response as string)
-        // Then just set our values directly:
-        settings.indicator.fill.colors = parsedResult.fills;
-        settings.indicator.stroke.colors = parsedResult.strokes;
-        console.log("WEB WORKER RESULT:")
-        console.log(parsedResult)
+      selectionWorker.onmessage = (response:any) => {
+        const parsedResult = JSON.parse(response.data as string)
+        if (parsedResult.error) {
+          // Something went wrong
+          console.error(parsedResult.error)
+        } else {
+          // Then just set our values directly:
+          settings.indicator.fill.colors = parsedResult.fills;
+          settings.indicator.stroke.colors = parsedResult.strokes;
+          const timeTotal = `${(parsedResult.timeEnd - timeStart)}ms`;
+          console.log(`WEB WORKER RESULT @${timeTotal}:`, parsedResult)
+        }
       };
     } else {
       // In theory this should never be triggered unless some false-positive triggers on webworker availability
@@ -314,6 +320,8 @@ onBeforeMount(async () => {
     //   console.log("Adapter focus changed:");
     //   console.log(e);
     // });
+  } else {
+    console.error("HOST ADAPTER NOT ONLINE")
   }
 })
 

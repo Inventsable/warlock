@@ -19,6 +19,41 @@ import type {
   ScriptDeepScanOptions,
 } from "../../shared/shared";
 
+const createRGBColor = (data:rgbColor) => {
+  let temp = new RGBColor();
+  temp.red = data.red;
+  temp.green = data.green;
+  temp.blue = data.blue;
+  return temp;
+}
+
+const createCMYKColor = (data:cmykColor) => {
+  let temp = new CMYKColor();
+  temp.cyan = data.cyan;
+  temp.magenta = data.magenta;
+  temp.yellow = data.yellow;
+  temp.black = data.black;
+  return temp;
+}
+
+interface payloadEvt {
+  data: ColorValue,
+  model: string;
+  isFill: boolean;
+}
+
+export const setActiveColor = (payload:string) => {
+  const temp = JSON.parse(payload);
+  const color = (temp as payloadEvt).model == 'CMYK' 
+    ? createCMYKColor((temp as payloadEvt).data as cmykColor) 
+    : createRGBColor((temp as payloadEvt).data as rgbColor);
+  if ((temp as payloadEvt).isFill) {
+    app.activeDocument.defaultFillColor = color;
+  } else {
+    app.activeDocument.defaultStrokeColor = color;
+  }
+}
+
 export const checkFillStroke = (): boolean => {
   return app.isStrokeActive();
 };
