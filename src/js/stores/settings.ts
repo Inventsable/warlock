@@ -309,6 +309,9 @@ export const useSettings = defineStore(name, {
     },
   },
   actions: {
+    refreshActivesWithNew(item:any) {
+      console.log("REFRESH ACTIVES NOT DONE YET")
+    },
     // Instead of using a computed getter and cloning, it might be better to sort in place
     // and trigger this action every time the list is set
     triggerFilter(reset: boolean = false) {
